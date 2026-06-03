@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Studio OS</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <p class="eyebrow">Studio OS</p>
+          <h1>Benjamin Caron</h1>
+          <p class="brand-copy">Prospection, projets, temps et finance dans un seul cockpit.</p>
+        </div>
+
+        <nav class="nav">
+          <button class="nav-link is-active" data-view="dashboard">Dashboard</button>
+          <button class="nav-link" data-view="pipeline">Prospection</button>
+          <button class="nav-link" data-view="clients">Clients</button>
+          <button class="nav-link" data-view="projects">Projets</button>
+          <button class="nav-link" data-view="finance">Devis & factures</button>
+          <button class="nav-link" data-view="time">Temps</button>
+          <button class="nav-link" data-view="settings">Réglages</button>
+        </nav>
+
+        <section class="sidebar-card">
+          <h2>Vue rapide</h2>
+          <div id="quick-stats" class="stack gap-sm"></div>
+        </section>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Outil métier V1</p>
+            <h2 id="view-title">Dashboard</h2>
+          </div>
+          <div class="topbar-actions">
+            <button id="seed-demo" class="button button-secondary">Recharger les données démo</button>
+            <button id="export-data" class="button button-secondary">Exporter les données</button>
+          </div>
+        </header>
+
+        <section id="dashboard-view" class="view is-visible">
+          <div id="dashboard-metrics" class="metric-grid"></div>
+
+          <div class="panel-grid two-columns">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Priorités</p>
+                  <h3>Actions à venir</h3>
+                </div>
+              </div>
+              <div id="dashboard-actions" class="list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Business</p>
+                  <h3>Pipeline commercial</h3>
+                </div>
+              </div>
+              <div id="dashboard-pipeline" class="kanban-mini"></div>
+            </section>
+          </div>
+
+          <div class="panel-grid two-columns">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Finance</p>
+                  <h3>CA par mois</h3>
+                </div>
+              </div>
+              <div id="dashboard-revenue" class="bar-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Rentabilité</p>
+                  <h3>Temps par projet</h3>
+                </div>
+              </div>
+              <div id="dashboard-time" class="list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="pipeline-view" class="view">
+          <div class="panel-grid two-columns">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Nouveau prospect</p>
+                  <h3>Ajouter un contact</h3>
+                </div>
+              </div>
+
+              <form id="prospect-form" class="form-grid">
+                <label>
+                  Société
+                  <input name="company" required />
+                </label>
+                <label>
+                  Contact
+                  <input name="name" required />
+                </label>
+                <label>
+                  Poste
+                  <input name="role" />
+                </label>
+                <label>
+                  Email
+                  <input name="email" type="email" />
+                </label>
+                <label>
+                  Ville
+                  <input name="city" />
+                </label>
+                <label>
+                  Segment
+                  <select name="segment">
+                    <option value="Cabinet d'avocats">Cabinet d'avocats</option>
+                    <option value="Marque">Marque</option>
+                    <option value="Institution">Institution</option>
+                    <option value="Autre">Autre</option>
+                  </select>
+                </label>
+                <label>
+                  Source
+                  <input name="source" placeholder="Annuaire, réseau, reco..." />
+                </label>
+                <label>
+                  Statut
+                  <select name="status">
+                    <option value="A contacter">A contacter</option>
+                    <option value="Contacté">Contacté</option>
+                    <option value="En échange">En échange</option>
+                    <option value="Call prévu">Call prévu</option>
+                    <option value="Proposition envoyée">Proposition envoyée</option>
+                  </select>
+                </label>
+                <label class="full">
+                  Notes
+                  <textarea name="notes" rows="4"></textarea>
+                </label>
+                <div class="form-actions full">
+                  <button class="button" type="submit">Ajouter le prospect</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Campagnes</p>
+                  <h3>Créer une campagne mailing</h3>
+                </div>
+              </div>
+
+              <form id="campaign-form" class="form-grid">
+                <label>
+                  Nom de campagne
+                  <input name="name" required />
+                </label>
+                <label>
+                  Cible
+                  <select name="segment">
+                    <option value="Cabinet d'avocats">Cabinet d'avocats</option>
+                    <option value="Marque">Marque</option>
+                    <option value="Institution">Institution</option>
+                    <option value="Tous">Tous</option>
+                  </select>
+                </label>
+                <label class="full">
+                  Objet
+                  <input name="subject" required />
+                </label>
+                <label class="full">
+                  Message
+                  <textarea name="message" rows="5"></textarea>
+                </label>
+                <div class="form-actions full">
+                  <button class="button" type="submit">Enregistrer la campagne</button>
+                </div>
+              </form>
+            </section>
+          </div>
+
+          <div class="panel-grid two-columns">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Prospects</p>
+                  <h3>Base de prospection</h3>
+                </div>
+              </div>
+              <div id="prospect-list" class="card-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Campagnes</p>
+                  <h3>Historique</h3>
+                </div>
+              </div>
+              <div id="campaign-list" class="card-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="clients-view" class="view">
+          <div class="panel-grid two-columns">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Nouveau client</p>
+                  <h3>Ajouter une fiche client</h3>
+                </div>
+              </div>
+              <form id="client-form" class="form-grid">
+                <label>
+                  Nom du client
+                  <input name="name" required />
+                </label>
+                <label>
+                  Contact principal
+                  <input name="contact" />
+                </label>
+                <label>
+                  Email
+                  <input name="email" type="email" />
+                </label>
+                <label>
+                  Téléphone
+                  <input name="phone" />
+                </label>
+                <label>
+                  Type
+                  <select name="type">
+                    <option value="Cabinet">Cabinet</option>
+                    <option value="Marque">Marque</option>
+                    <option value="Institution">Institution</option>
+                    <option value="Autre">Autre</option>
+                  </select>
+                </label>
+                <label>
+                  Ville
+                  <input name="city" />
+                </label>
+                <label class="full">
+                  Notes
+                  <textarea name="notes" rows="4"></textarea>
+                </label>
+                <div class="form-actions full">
+                  <button class="button" type="submit">Ajouter le client</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Clients</p>
+                  <h3>Portefeuille actif</h3>
+                </div>
+              </div>
+              <div id="client-list" class="card-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="projects-view" class="view">
+          <div class="panel-grid two-columns">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Nouveau projet</p>
+                  <h3>Planifier une mission</h3>
+                </div>
+              </div>
+              <form id="project-form" class="form-grid">
+                <label>
+                  Nom du projet
+                  <input name="name" required />
+                </label>
+                <label>
+                  Client
+                  <select name="clientId" id="project-client-select"></select>
+                </label>
+                <label>
+                  Type de mission
+                  <select name="type">
+                    <option value="Branding">Branding</option>
+                    <option value="Site web">Site web</option>
+                    <option value="Recommandation stratégique">Recommandation stratégique</option>
+                    <option value="Édition">Édition</option>
+                    <option value="Direction artistique">Direction artistique</option>
+                  </select>
+                </label>
+                <label>
+                  Statut
+                  <select name="status">
+                    <option value="Cadrage">Cadrage</option>
+                    <option value="En cours">En cours</option>
+                    <option value="En attente">En attente</option>
+                    <option value="Livré">Livré</option>
+                    <option value="Facturé">Facturé</option>
+                  </select>
+                </label>
+                <label>
+                  Deadline
+                  <input name="deadline" type="date" />
+                </label>
+                <label>
+                  Budget validé HT
+                  <input name="budget" type="number" min="0" step="0.01" />
+                </label>
+                <label class="full">
+                  Prochaine action
+                  <input name="nextAction" />
+                </label>
+                <label class="full">
+                  Notes
+                  <textarea name="notes" rows="4"></textarea>
+                </label>
+                <div class="form-actions full">
+                  <button class="button" type="submit">Créer le projet</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Projets</p>
+                  <h3>Suivi opérationnel</h3>
+                </div>
+              </div>
+              <div id="project-list" class="card-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="finance-view" class="view">
+          <div class="panel-grid two-columns">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Nouveau document</p>
+                  <h3>Créer devis ou facture</h3>
+                </div>
+              </div>
+              <form id="invoice-form" class="form-grid">
+                <label>
+                  Type
+                  <select name="kind">
+                    <option value="quote">Devis</option>
+                    <option value="invoice">Facture</option>
+                  </select>
+                </label>
+                <label>
+                  Référence
+                  <input name="reference" required />
+                </label>
+                <label>
+                  Client
+                  <select name="clientId" id="finance-client-select"></select>
+                </label>
+                <label>
+                  Projet
+                  <select name="projectId" id="finance-project-select"></select>
+                </label>
+                <label>
+                  Date
+                  <input name="date" type="date" required />
+                </label>
+                <label>
+                  Échéance
+                  <input name="dueDate" type="date" />
+                </label>
+                <label>
+                  Montant HT
+                  <input name="amountHt" type="number" min="0" step="0.01" required />
+                </label>
+                <label>
+                  TVA %
+                  <input name="vatRate" type="number" min="0" step="0.01" />
+                </label>
+                <label>
+                  Statut
+                  <select name="status">
+                    <option value="Brouillon">Brouillon</option>
+                    <option value="Envoyé">Envoyé</option>
+                    <option value="Validé">Validé</option>
+                    <option value="Payée">Payée</option>
+                    <option value="En retard">En retard</option>
+                  </select>
+                </label>
+                <label>
+                  Paiement reçu
+                  <input name="paidAmount" type="number" min="0" step="0.01" value="0" />
+                </label>
+                <label class="full">
+                  Libellé
+                  <input name="label" />
+                </label>
+                <div class="form-actions full">
+                  <button class="button" type="submit">Enregistrer</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Charges</p>
+                  <h3>Suivi des dépenses</h3>
+                </div>
+              </div>
+              <form id="expense-form" class="form-grid">
+                <label>
+                  Libellé
+                  <input name="label" required />
+                </label>
+                <label>
+                  Catégorie
+                  <select name="category">
+                    <option value="Logiciels">Logiciels</option>
+                    <option value="Sous-traitance">Sous-traitance</option>
+                    <option value="Impression">Impression</option>
+                    <option value="Déplacement">Déplacement</option>
+                    <option value="Autre">Autre</option>
+                  </select>
+                </label>
+                <label>
+                  Date
+                  <input name="date" type="date" required />
+                </label>
+                <label>
+                  Montant TTC
+                  <input name="amount" type="number" min="0" step="0.01" required />
+                </label>
+                <div class="form-actions full">
+                  <button class="button" type="submit">Ajouter la charge</button>
+                </div>
+              </form>
+            </section>
+          </div>
+
+          <div class="panel-grid three-columns">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Devis & factures</p>
+                  <h3>Documents</h3>
+                </div>
+              </div>
+              <div id="finance-list" class="card-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Charges</p>
+                  <h3>Dépenses</h3>
+                </div>
+              </div>
+              <div id="expense-list" class="card-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Synthèse</p>
+                  <h3>Vue financière</h3>
+                </div>
+              </div>
+              <div id="finance-summary" class="list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="time-view" class="view">
+          <div class="panel-grid two-columns">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Saisie de temps</p>
+                  <h3>Ajouter une entrée</h3>
+                </div>
+              </div>
+              <form id="time-form" class="form-grid">
+                <label>
+                  Projet
+                  <select name="projectId" id="time-project-select"></select>
+                </label>
+                <label>
+                  Date
+                  <input name="date" type="date" required />
+                </label>
+                <label>
+                  Catégorie
+                  <select name="category">
+                    <option value="Stratégie">Stratégie</option>
+                    <option value="DA">DA</option>
+                    <option value="Design">Design</option>
+                    <option value="Rédaction">Rédaction</option>
+                    <option value="Dev">Dev</option>
+                    <option value="Commercial">Commercial</option>
+                    <option value="Admin">Admin</option>
+                  </select>
+                </label>
+                <label>
+                  Durée (heures)
+                  <input name="hours" type="number" min="0" step="0.25" required />
+                </label>
+                <label class="full">
+                  Commentaire
+                  <input name="note" />
+                </label>
+                <div class="form-actions full">
+                  <button class="button" type="submit">Ajouter le temps</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Temps</p>
+                  <h3>Entrées récentes</h3>
+                </div>
+              </div>
+              <div id="time-list" class="card-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="settings-view" class="view">
+          <div class="panel-grid two-columns">
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Réglages société</p>
+                  <h3>Paramètres généraux</h3>
+                </div>
+              </div>
+              <form id="settings-form" class="form-grid">
+                <label>
+                  Nom de la structure
+                  <input name="studioName" />
+                </label>
+                <label>
+                  Taux horaire cible
+                  <input name="hourlyRate" type="number" min="0" step="1" />
+                </label>
+                <label>
+                  TVA par défaut %
+                  <input name="defaultVatRate" type="number" min="0" step="0.01" />
+                </label>
+                <label>
+                  Objectif CA annuel
+                  <input name="annualGoal" type="number" min="0" step="0.01" />
+                </label>
+                <div class="form-actions full">
+                  <button class="button" type="submit">Enregistrer les réglages</button>
+                </div>
+              </form>
+            </section>
+
+            <section class="panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">Export</p>
+                  <h3>État des données</h3>
+                </div>
+              </div>
+              <pre id="settings-preview" class="settings-preview"></pre>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="metric-template">
+      <article class="metric-card">
+        <p class="metric-label"></p>
+        <strong class="metric-value"></strong>
+        <span class="metric-meta"></span>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
