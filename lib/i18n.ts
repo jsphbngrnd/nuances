@@ -181,8 +181,8 @@ export const copy: Record<Locale, Copy> = {
       email: "✉️ Continue with email magic link",
       apple: "🍎 Continue with Apple",
       notes: [
-        "Under the hood this screen is intended to use Supabase Auth.",
-        "Session state then routes the user into lightweight onboarding before home.",
+        "No public profile is created at signup. Your identity stays private.",
+        "After signing up, check your email to confirm your account.",
       ],
       back: "Back",
       continue: "Continue to onboarding",
@@ -360,8 +360,8 @@ export const copy: Record<Locale, Copy> = {
       email: "✉️ Continuer avec un lien magique par email",
       apple: "🍎 Continuer avec Apple",
       notes: [
-        "En dessous, cet écran est prévu pour utiliser Supabase Auth.",
-        "L'état de session envoie ensuite l'utilisateur vers un onboarding léger avant l'accueil.",
+        "Aucun profil public n'est créé à l'inscription. Votre identité reste privée.",
+        "Après l'inscription, vérifiez votre email pour confirmer votre compte.",
       ],
       back: "Retour",
       continue: "Continuer vers l'onboarding",

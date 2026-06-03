@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
+import { AuthForm } from "@/components/auth-form";
 import { getCopy } from "@/lib/i18n";
 import { getLocale } from "@/lib/server-locale";
 
 export default async function AuthPage() {
   const locale = await getLocale();
   const t = getCopy(locale);
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
   return (
     <AppShell locale={locale} showNav={false}>
@@ -16,13 +18,8 @@ export default async function AuthPage() {
           {t.auth.body}
         </p>
 
-        <div className="mt-8 space-y-3">
-          <button className="w-full rounded-full bg-bone px-5 py-4 text-sm font-semibold text-fog">
-            {t.auth.email}
-          </button>
-          <button className="w-full rounded-full border border-white/15 bg-white/[0.12] px-5 py-4 text-sm font-medium text-white transition hover:border-bone hover:bg-bone hover:text-fog">
-            {t.auth.apple}
-          </button>
+        <div className="mt-8">
+          <AuthForm appUrl={appUrl} />
         </div>
 
         <div className="my-6 hairline" />
@@ -33,12 +30,9 @@ export default async function AuthPage() {
           ))}
         </div>
 
-        <div className="mt-8 flex items-center justify-between">
-          <Link href="/" className="soft-link">
+        <div className="mt-6">
+          <Link href="/" className="soft-link text-sm">
             {t.auth.back}
-          </Link>
-          <Link href="/onboarding" className="soft-link">
-            {t.auth.continue}
           </Link>
         </div>
       </section>
