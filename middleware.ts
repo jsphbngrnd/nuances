@@ -6,10 +6,15 @@ export const runtime = "nodejs";
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return supabaseResponse;
+  }
+
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -24,33 +29,35 @@ export async function middleware(request: NextRequest) {
           );
         },
       },
+    });
+
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const { pathname } = request.nextUrl;
+
+    const protectedPaths = [
+      "/home",
+      "/matchmaking",
+      "/room",
+      "/settings",
+      "/reconnects",
+      "/start",
+      "/topic",
+      "/summary",
+      "/onboarding",
+    ];
+
+    const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
+
+    if (!user && isProtected) {
+      return NextResponse.redirect(new URL("/auth", request.url));
     }
-  );
 
-  const { data: { user } } = await supabase.auth.getUser();
-
-  const { pathname } = request.nextUrl;
-
-  const protectedPaths = [
-    "/home",
-    "/matchmaking",
-    "/room",
-    "/settings",
-    "/reconnects",
-    "/start",
-    "/topic",
-    "/summary",
-    "/onboarding",
-  ];
-
-  const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
-
-  if (!user && isProtected) {
-    return NextResponse.redirect(new URL("/auth", request.url));
-  }
-
-  if (user && pathname === "/auth") {
-    return NextResponse.redirect(new URL("/home", request.url));
+    if (user && pathname === "/auth") {
+      return NextResponse.redirect(new URL("/home", request.url));
+    }
+  } catch {
+    // If Supabase is unreachable or misconfigured, let the request through
   }
 
   return supabaseResponse;
