@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 
 type Mode = "signin" | "signup";
 
-export function AuthForm({ appUrl }: { appUrl: string }) {
+export function AuthForm({ appUrl: _appUrl }: { appUrl: string }) {
+  const appUrl = typeof window !== "undefined" ? window.location.origin : _appUrl;
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
