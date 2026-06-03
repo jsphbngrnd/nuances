@@ -13,19 +13,17 @@ export function AuthForm({ appUrl }: { appUrl: string }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
 
   function switchMode(next: Mode) {
     setMode(next);
     setError(null);
-    setMessage(null);
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setMessage(null);
 
     const supabase = createClient();
 
@@ -40,7 +38,7 @@ export function AuthForm({ appUrl }: { appUrl: string }) {
       if (error) {
         setError(error.message);
       } else {
-        setMessage("Check your email to confirm your account.");
+        setConfirmed(true);
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -55,40 +53,48 @@ export function AuthForm({ appUrl }: { appUrl: string }) {
     setLoading(false);
   }
 
+  if (confirmed) {
+    return (
+      <div className="space-y-6 pt-2">
+        <div>
+          <p className="eyebrow">Check your inbox</p>
+          <h2 className="screen-heading mt-3">One step left.</h2>
+          <p className="mt-4 text-sm leading-6 text-ink/78">
+            We sent a confirmation link to{" "}
+            <span className="text-white/90">{email}</span>. Click it to
+            activate your account and get started.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => { setConfirmed(false); setMode("signin"); }}
+          className="soft-link text-sm"
+        >
+          Back to sign in
+        </button>
+      </div>
+    );
+  }
+
   const inputClass =
-    "w-full rounded-2xl border border-white/15 bg-white/[0.06] px-4 py-3.5 text-sm text-white placeholder-white/40 outline-none transition focus:border-white/30 focus:bg-white/[0.09]";
+    "w-full rounded-2xl border border-white/12 bg-white/[0.05] px-4 py-3.5 text-sm text-white/90 placeholder-white/32 outline-none transition focus:border-white/28 focus:bg-white/[0.08]";
 
   return (
-    <div className="space-y-5">
-      <div className="flex rounded-full border border-white/12 bg-white/[0.05] p-1">
-        <button
-          type="button"
-          onClick={() => switchMode("signin")}
-          className={`flex-1 rounded-full py-2.5 text-xs font-semibold tracking-wide transition ${
-            mode === "signin"
-              ? "bg-bone text-fog shadow-sm"
-              : "text-white/60 hover:text-white/90"
-          }`}
-        >
-          Sign in
-        </button>
-        <button
-          type="button"
-          onClick={() => switchMode("signup")}
-          className={`flex-1 rounded-full py-2.5 text-xs font-semibold tracking-wide transition ${
-            mode === "signup"
-              ? "bg-bone text-fog shadow-sm"
-              : "text-white/60 hover:text-white/90"
-          }`}
-        >
-          Create account
-        </button>
+    <div className="space-y-6 pt-2">
+      <div>
+        <p className="eyebrow">
+          {mode === "signin" ? "Welcome back" : "Get started"}
+        </p>
+        <h2 className="screen-heading mt-3">
+          {mode === "signin" ? "Sign in." : "Create your account."}
+        </h2>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
         <input
           type="email"
-          placeholder="Email"
+          placeholder="Email address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -97,7 +103,7 @@ export function AuthForm({ appUrl }: { appUrl: string }) {
         />
         <input
           type="password"
-          placeholder="Password"
+          placeholder={mode === "signup" ? "Choose a password" : "Password"}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -107,24 +113,49 @@ export function AuthForm({ appUrl }: { appUrl: string }) {
         />
 
         {error && (
-          <p className="text-xs text-red-400/90">{error}</p>
-        )}
-        {message && (
-          <p className="text-xs text-emerald-400/90">{message}</p>
+          <p className="pt-1 text-xs leading-5 text-red-400/90">{error}</p>
         )}
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-full bg-bone px-5 py-4 text-sm font-semibold text-fog transition disabled:opacity-50"
-        >
-          {loading
-            ? "..."
-            : mode === "signup"
-            ? "✨ Create account"
-            : "✉️ Sign in"}
-        </button>
+        <div className="pt-1">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-full bg-bone px-5 py-4 text-sm font-semibold text-fog transition disabled:opacity-40"
+          >
+            {loading
+              ? "Just a moment…"
+              : mode === "signup"
+              ? "Create account"
+              : "Sign in"}
+          </button>
+        </div>
       </form>
+
+      <p className="text-center text-xs text-white/46">
+        {mode === "signin" ? (
+          <>
+            No account?{" "}
+            <button
+              type="button"
+              onClick={() => switchMode("signup")}
+              className="soft-link"
+            >
+              Sign up
+            </button>
+          </>
+        ) : (
+          <>
+            Already have an account?{" "}
+            <button
+              type="button"
+              onClick={() => switchMode("signin")}
+              className="soft-link"
+            >
+              Sign in
+            </button>
+          </>
+        )}
+      </p>
     </div>
   );
 }
