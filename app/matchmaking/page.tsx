@@ -20,18 +20,35 @@ function MatchmakingPageInner() {
   const [secs, setSecs] = useState(0);
   const [matched, setMatched] = useState(false);
   const [matchType, setMatchType] = useState<"real" | "ai" | null>(null);
+  const [roomId, setRoomId] = useState<string | null>(null);
 
   useEffect(() => {
     const tick = setInterval(() => setSecs(s => s + 1), 1000);
     let realMatchFound = false;
 
-    // Poll for a real user match every 2s
+    // Enter queue immediately
+    fetch("/api/matchmaking", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "enter", mode }),
+    }).then(r => r.json()).then(data => {
+      if (data.matched && !realMatchFound) {
+        realMatchFound = true;
+        clearInterval(pollReal);
+        clearTimeout(aiFallback);
+        setRoomId(data.roomId);
+        setMatchType("real");
+        setMatched(true);
+      }
+    }).catch(() => {});
+
+    // Poll every 2s for a human match
     const pollReal = setInterval(async () => {
       try {
         const res = await fetch("/api/matchmaking", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mode, action: "poll" }),
+          body: JSON.stringify({ action: "poll", mode }),
         });
         if (res.ok) {
           const data = await res.json();
@@ -39,14 +56,15 @@ function MatchmakingPageInner() {
             realMatchFound = true;
             clearInterval(pollReal);
             clearTimeout(aiFallback);
+            setRoomId(data.roomId);
             setMatchType("real");
             setMatched(true);
           }
         }
-      } catch { /* Supabase not wired yet — skip */ }
+      } catch { /* skip */ }
     }, 2000);
 
-    // After timeout, fall back to AI persona
+    // After timeout fall back to AI
     const aiFallback = setTimeout(() => {
       if (!realMatchFound) {
         clearInterval(pollReal);
@@ -60,7 +78,10 @@ function MatchmakingPageInner() {
 
   useEffect(() => {
     if (!matched) return;
-    const t = setTimeout(() => router.push(`/topic?mode=${mode}&matchType=${matchType}`), 1400);
+    const dest = matchType === "real" && roomId
+      ? `/room/${roomId}?mode=${mode}&matchType=real`
+      : `/topic?mode=${mode}&matchType=ai`;
+    const t = setTimeout(() => router.push(dest as any), 1400);
     return () => clearTimeout(t);
   }, [matched]);
 
