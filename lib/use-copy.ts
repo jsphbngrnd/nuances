@@ -11,7 +11,9 @@ function getLocaleCookie(): Locale {
 }
 
 export function useCopy(): Copy {
-  const [copy, setCopy] = useState<Copy>(() => getCopy(getLocaleCookie()));
+  // Always start with "en" so server + client initial render match (no hydration error).
+  // useEffect applies the real locale after hydration.
+  const [copy, setCopy] = useState<Copy>(getCopy("en"));
 
   useEffect(() => {
     const sync = () => setCopy(getCopy(getLocaleCookie()));
@@ -24,7 +26,7 @@ export function useCopy(): Copy {
 }
 
 export function useLocale(): Locale {
-  const [locale, setLocale] = useState<Locale>(() => getLocaleCookie());
+  const [locale, setLocale] = useState<Locale>("en");
   useEffect(() => {
     const sync = () => setLocale(getLocaleCookie());
     sync();
