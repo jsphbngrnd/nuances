@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 const bodySchema = z.object({
   mode: z.string(),
   topic: z.string(),
   partnerAlias: z.string(),
+  roomId: z.string().optional(),
   locale: z.string().optional().default("en"),
   messages: z.array(z.object({
     who: z.enum(["you", "them"]),
@@ -14,7 +18,7 @@ const bodySchema = z.object({
 
 export async function POST(request: Request) {
   const body = bodySchema.parse(await request.json());
-  const { mode, topic, partnerAlias, locale, messages } = body;
+  const { mode, topic, partnerAlias, roomId, locale, messages } = body;
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -71,10 +75,44 @@ Rules:
   const data = await res.json();
   const raw = data.choices?.[0]?.message?.content ?? "{}";
 
+  let parsed: Record<string, unknown>;
   try {
-    const parsed = JSON.parse(raw);
-    return NextResponse.json(parsed);
+    parsed = JSON.parse(raw);
   } catch {
     return NextResponse.json({ error: "Failed to parse summary" }, { status: 500 });
   }
+
+  // Persist to summaries table so account stats (reach end) can be computed
+  if (roomId) {
+    try {
+      const cookieStore = await cookies();
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+        { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+      );
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const admin = createSupabaseClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { auth: { autoRefreshToken: false, persistSession: false } }
+        );
+        // Upsert so re-generating doesn't create duplicates
+        await admin.from("summaries").upsert({
+          room_id: roomId,
+          summary_text: (parsed.summary as string) ?? "",
+          agreement_points_json: parsed.agreement ?? [],
+          disagreement_points_json: parsed.disagreement ?? [],
+          summary_tags_json: parsed.tags ?? [],
+        }, { onConflict: "room_id" });
+      }
+    } catch (e) {
+      console.error("[generate-summary] persist error:", e);
+      // Don't fail the request — summary is still returned to client
+    }
+  }
+
+  return NextResponse.json(parsed);
 }

@@ -24,15 +24,24 @@ export default function AccountPage() {
       // Fetch profile
       const { data: u } = await supabase.from("users").select("alias, display_name, trust_score").eq("id", user.id).single();
       if (u?.alias) setAlias(u.alias);
-      // Fetch reconnect count (mutual)
-      const { count: recCount } = await supabase
-        .from("reconnects").select("id", { count: "exact", head: true })
-        .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
-        .eq("user_a_vote", true).eq("user_b_vote", true);
+      const [{ count: recCount }, { count: totalRooms }, { count: endedRooms }] = await Promise.all([
+        // Mutual reconnects
+        supabase.from("reconnects").select("id", { count: "exact", head: true })
+          .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
+          .eq("user_a_vote", true).eq("user_b_vote", true),
+        // Total rooms this user participated in
+        supabase.from("room_participants").select("id", { count: "exact", head: true })
+          .eq("user_id", user.id),
+        // Rooms that reached a summary (have an entry in summaries table)
+        supabase.from("room_participants").select("room_id, summaries!inner(id)", { count: "exact", head: true })
+          .eq("user_id", user.id),
+      ]);
+      const total = totalRooms ?? 0;
+      const ended = endedRooms ?? 0;
       setStats({
         trustScore: u?.trust_score != null ? Number(u.trust_score).toFixed(3) : "—",
         reconnectCount: String(recCount ?? 0),
-        reachEnd: "—", // would need summary table query
+        reachEnd: total > 0 ? `${Math.round((ended / total) * 100)}%` : "—",
       });
     });
   }, []);
