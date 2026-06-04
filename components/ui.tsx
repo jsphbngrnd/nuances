@@ -65,6 +65,7 @@ function NavIcon({ kind }: { kind: string }) {
   if (kind === "start") return <svg viewBox="0 0 24 24" aria-hidden="true"><path {...p} d="M12 3.75 14.2 8.2l4.9.72-3.55 3.46.84 4.87L12 14.93l-4.39 2.32.84-4.87-3.55-3.46 4.9-.72L12 3.75Z" /></svg>;
   if (kind === "home") return <svg viewBox="0 0 24 24" aria-hidden="true"><path {...p} d="M4 10.5 12 4l8 6.5" /><path {...p} d="M6.5 10v9h11v-9" /></svg>;
   if (kind === "reconnects") return <svg viewBox="0 0 24 24" aria-hidden="true"><path {...p} d="M12 20.25s-6.75-4.13-6.75-9.6A4.15 4.15 0 0 1 9.45 6.5c1.14 0 2.16.45 2.55 1.29.39-.84 1.41-1.29 2.55-1.29a4.15 4.15 0 0 1 4.2 4.15c0 5.47-6.75 9.6-6.75 9.6Z" /></svg>;
+  if (kind === "account") return <svg viewBox="0 0 24 24" aria-hidden="true"><circle {...p} cx="12" cy="8" r="3.5" /><path {...p} d="M4.5 20c0-3.31 3.36-6 7.5-6s7.5 2.69 7.5 6" /></svg>;
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path {...p} d="M12 3.4 19 6.1v4.9c0 4.4-2.9 7.4-7 8.9-4.1-1.5-7-4.5-7-8.9V6.1L12 3.4Z" /><path {...p} d="m8.8 11.9 2.2 2.2 4.2-4.4" /></svg>;
 }
 
@@ -72,7 +73,7 @@ const NAV_ITEMS = [
   { id: "start", label: "Start", href: "/start" },
   { id: "home", label: "Home", href: "/home" },
   { id: "reconnects", label: "Reconnects", href: "/reconnects" },
-  { id: "settings", label: "Safety", href: "/account" },
+  { id: "account", label: "Account", href: "/account" },
 ] as const;
 
 export function MiniNav() {

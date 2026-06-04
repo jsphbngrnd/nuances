@@ -94,7 +94,10 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   // Voice recognition setup
   const startListening = useCallback(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition) {
+      alert("Voice input is not supported in this browser. Use Chrome or Edge.");
+      return;
+    }
     const rec = new SpeechRecognition();
     rec.continuous = true;
     rec.interimResults = true;
@@ -120,7 +123,9 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   }, []);
 
   function toggleVoice() {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!voice) {
+      if (!SpeechRecognition) { alert("Voice input requires Chrome or Edge."); return; }
       setVoice(true);
       startListening();
     } else {
@@ -312,7 +317,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
               onChange={e => setDraft(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && send()}
               placeholder={listening ? "Speaking… press send when done" : "Say something honest…"}
-              style={{ flex: 1, padding: "11px 14px", borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)", color: "var(--text)", fontSize: 13, outline: "none" }}
+              style={{ flex: 1, padding: "11px 14px", borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)", color: "var(--text)", fontSize: 16, outline: "none" }}
             />
 
             {/* Send */}

@@ -79,7 +79,13 @@ Additional rules:
   });
 
   if (!res.ok) {
-    return NextResponse.json({ reply: "…", persona: persona?.alias ?? "VoyageuseSereine" });
+    const errData = await res.json().catch(() => ({}));
+    const isQuota = errData?.error?.code === "insufficient_quota";
+    const reply = isQuota
+      ? "(OpenAI quota exceeded — add credits at platform.openai.com/settings/billing)"
+      : "Sorry, something went wrong. Try again.";
+    console.error("[room-reply] OpenAI error:", errData?.error?.message);
+    return NextResponse.json({ reply, persona: persona?.alias ?? "VoyageuseSereine" });
   }
 
   const data = await res.json();
