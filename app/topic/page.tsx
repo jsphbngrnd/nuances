@@ -23,8 +23,8 @@ function TopicPageInner() {
 
   return (
     <div className="nuance-phone">
-      <div className="np-notch" />
-      <StatusBar />
+
+
       <Screen scroll={false} style={{ display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "4px 0 14px" }}>
           <button onClick={() => router.push(`/matchmaking?mode=${mode}`)} style={{ width: 36, height: 36, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)", color: "var(--text)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>

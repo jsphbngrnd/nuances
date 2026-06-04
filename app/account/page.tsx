@@ -49,8 +49,8 @@ export default function AccountPage() {
 
   return (
     <div className="nuance-phone">
-      <div className="np-notch" />
-      <StatusBar />
+
+
       <Screen>
         <TopBar sub="Account" title="You, quietly." />
 

@@ -179,8 +179,8 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
 
   return (
     <div className="nuance-phone">
-      <div className="np-notch" />
-      <StatusBar />
+
+
       <div className="np-body" style={{ display: "flex", flexDirection: "column", overflow: "hidden", padding: "6px 14px 10px" }}>
 
         {/* Header */}

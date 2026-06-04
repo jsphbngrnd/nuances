@@ -89,8 +89,8 @@ function SummaryPageInner() {
 
   return (
     <div className="nuance-phone">
-      <div className="np-notch" />
-      <StatusBar />
+
+
       <Screen>
         {/* TopBar */}
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "4px 0 14px" }}>

@@ -37,26 +37,9 @@ export function BackIcon() {
   );
 }
 
-/* ── StatusBar ── */
+/* ── StatusBar — removed per user request ── */
 export function StatusBar() {
-  return (
-    <div className="np-status">
-      <span className="np-time">9:41</span>
-      <span className="np-pill">Nuance</span>
-      <span className="np-meta" style={{ display: "flex", gap: 4, alignItems: "center" }}>
-        <svg width="16" height="11" viewBox="0 0 24 16" fill="currentColor" aria-hidden="true">
-          <rect x="0" y="3" width="4" height="10" rx="1" />
-          <rect x="6" y="1" width="4" height="12" rx="1" />
-          <rect x="12" y="0" width="4" height="13" rx="1" opacity="0.5" />
-        </svg>
-        <svg width="20" height="11" viewBox="0 0 28 14" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true">
-          <rect x="0.7" y="0.7" width="22" height="12.6" rx="3" />
-          <rect x="2.6" y="2.6" width="15" height="8.8" rx="1.4" fill="currentColor" stroke="none" />
-          <rect x="24" y="4.5" width="2.4" height="5" rx="1.2" fill="currentColor" stroke="none" />
-        </svg>
-      </span>
-    </div>
-  );
+  return null;
 }
 
 /* ── MiniNav ── */

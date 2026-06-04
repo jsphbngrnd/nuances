@@ -25,8 +25,8 @@ export default function HomePage() {
 
   return (
     <div className="nuance-phone">
-      <div className="np-notch" />
-      <StatusBar />
+
+
       <Screen>
         {/* Profile chip */}
         <button onClick={() => router.push("/account")} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 999, border: "1px solid var(--line-soft)", background: "var(--panel)", cursor: "pointer", color: "var(--text)", font: "inherit", marginBottom: 22 }}>

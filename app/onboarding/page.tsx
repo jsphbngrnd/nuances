@@ -66,8 +66,8 @@ export default function OnboardingPage() {
 
   return (
     <div className="nuance-phone">
-      <div className="np-notch" />
-      <StatusBar />
+
+
       <div className="np-body" style={{ display: "flex", flexDirection: "column", paddingBottom: 6, overflow: "hidden" }}>
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: 18 }}>

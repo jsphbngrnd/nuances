@@ -35,8 +35,8 @@ function AuthPageInner() {
 
   return (
     <div className="nuance-phone">
-      <div className="np-notch" />
-      <StatusBar />
+
+
       <Screen>
         <div style={{ paddingTop: 26, textAlign: "center" }}>
           <div style={{ fontFamily: "var(--font-display)", fontSize: 28 }}>☾</div>

@@ -16,8 +16,8 @@ function StartPageInner() {
 
   return (
     <div className="nuance-phone">
-      <div className="np-notch" />
-      <StatusBar />
+
+
       <Screen>
         <TopBar sub="Start" title="Choose the exchange." onBack={() => router.push("/home")} />
         <p style={{ margin: "0 0 18px", fontSize: 12.5, lineHeight: 1.45, color: "var(--muted)" }}>

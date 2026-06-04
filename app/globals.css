@@ -130,38 +130,6 @@ button, input, select, textarea { font: inherit; }
   .np-device .nuance-phone { border-radius: 0; }
 }
 
-/* ── Status bar ── */
-.np-status {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 22px 6px;
-}
-.np-notch {
-  position: absolute;
-  top: 9px; left: 50%;
-  transform: translateX(-50%);
-  width: 76px; height: 5px;
-  border-radius: 999px;
-  background: var(--line);
-}
-.np-time, .np-meta {
-  font-family: var(--font-caps);
-  font-size: 11px; font-weight: 600;
-  letter-spacing: 0.22em; text-transform: uppercase;
-  color: var(--faint);
-}
-.np-pill {
-  font-family: var(--font-caps);
-  border-radius: 999px;
-  border: 1px solid var(--line-soft);
-  background: var(--panel);
-  padding: 5px 11px;
-  font-size: 10px; font-weight: 700;
-  letter-spacing: 0.3em; text-transform: uppercase;
-  color: var(--text);
-}
 
 /* ── Body ── */
 .np-body {

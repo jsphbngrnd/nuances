@@ -17,8 +17,8 @@ export default function ReconnectsPage() {
 
   return (
     <div className="nuance-phone">
-      <div className="np-notch" />
-      <StatusBar />
+
+
       <Screen>
         <div style={{ paddingBottom: 18 }}>
           <p className="np-eyebrow">Reconnects</p>

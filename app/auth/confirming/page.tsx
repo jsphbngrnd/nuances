@@ -17,8 +17,8 @@ export default function ConfirmingPage() {
 
   return (
     <div className="nuance-phone">
-      <div className="np-notch" />
-      <StatusBar />
+
+
       <Screen scroll={false} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ textAlign: "center", padding: 24 }}>
           <div style={{ position: "relative", width: 76, height: 76, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "center" }}>

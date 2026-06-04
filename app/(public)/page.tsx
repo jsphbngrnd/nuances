@@ -24,8 +24,8 @@ export default function LandingPage() {
 
   return (
     <div className="nuance-phone">
-      <div className="np-notch" />
-      <StatusBar />
+
+
       <Screen>
         {/* Hero */}
         <div style={{ position: "relative", textAlign: "center", paddingTop: 30 }}>
