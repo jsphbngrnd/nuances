@@ -13,7 +13,7 @@ export default async function LandingPage() {
 
   return (
     <main className="min-h-screen">
-      <div className="app-frame pb-16">
+      <div className="mx-auto max-w-[460px] px-5 pb-16">
 
         {/* Header */}
         <header className="flex items-center justify-between py-3">
