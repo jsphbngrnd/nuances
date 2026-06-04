@@ -7,8 +7,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ONB } from "@/lib/nuance-data";
 import { StatusBar, Screen, MiniNav, TopBar, Field, PillGroup, ToggleRow, inputStyle } from "@/components/ui";
-import { useCopy, setLocaleCookie } from "@/lib/use-copy";
-import type { Locale } from "@/lib/copy";
+import { useCopy } from "@/lib/use-copy";
 
 const ALIAS = "OracleDuVendredi";
 
@@ -20,7 +19,6 @@ export default function AccountPage() {
   useEffect(() => {
     if (localStorage.getItem("nuance-theme") === "day") setTheme("day");
   }, []);
-  const [lang, setLang] = useState("en");
   const [name, setName] = useState("");
   const [mood, setMood] = useState("Curious");
   const [interests, setInterests] = useState<string[]>(["Philosophy"]);
@@ -83,16 +81,6 @@ export default function AccountPage() {
         {/* Display */}
         <div style={{ padding: "16px 18px", borderRadius: 22, border: "1px solid var(--line-soft)", background: "var(--panel)", marginBottom: 14 }}>
           <p className="np-eyebrow" style={{ fontSize: 9, marginBottom: 14 }}>{t.account.displaySection}</p>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-            <span style={{ fontSize: 13.5 }}>{t.account.language}</span>
-            <div style={{ display: "flex", gap: 4, padding: 4, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)" }}>
-              {[["en", "EN"], ["fr", "FR"]].map(([code, label]) => (
-                <button key={code} onClick={() => { setLang(code); setLocaleCookie(code as Locale); }} style={{ padding: "6px 12px", borderRadius: 999, border: "none", cursor: "pointer", fontFamily: "var(--font-caps)", fontSize: 10, letterSpacing: "0.14em", background: lang === code ? "var(--accent)" : "transparent", color: lang === code ? "var(--on-accent)" : "var(--text)", transition: "background 160ms ease" }}>
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <span style={{ fontSize: 13.5 }}>{t.account.theme}</span>
             <div style={{ display: "flex", gap: 4, padding: 4, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)" }}>
