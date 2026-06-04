@@ -29,8 +29,8 @@ export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     const protectedPaths = [
-      "/home", "/matchmaking", "/room", "/settings",
-      "/reconnects", "/start", "/topic", "/summary",
+      "/home", "/matchmaking", "/room",
+      "/reconnects", "/notifications", "/topic", "/summary",
       "/onboarding", "/account",
     ];
 

@@ -46,36 +46,39 @@ export function StatusBar() {
 /* ── MiniNav ── */
 function NavIcon({ kind }: { kind: string }) {
   const p = { fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-  if (kind === "start") return <svg viewBox="0 0 24 24" aria-hidden="true"><path {...p} d="M12 3.75 14.2 8.2l4.9.72-3.55 3.46.84 4.87L12 14.93l-4.39 2.32.84-4.87-3.55-3.46 4.9-.72L12 3.75Z" /></svg>;
   if (kind === "home") return <svg viewBox="0 0 24 24" aria-hidden="true"><path {...p} d="M4 10.5 12 4l8 6.5" /><path {...p} d="M6.5 10v9h11v-9" /></svg>;
   if (kind === "reconnects") return <svg viewBox="0 0 24 24" aria-hidden="true"><path {...p} d="M12 20.25s-6.75-4.13-6.75-9.6A4.15 4.15 0 0 1 9.45 6.5c1.14 0 2.16.45 2.55 1.29.39-.84 1.41-1.29 2.55-1.29a4.15 4.15 0 0 1 4.2 4.15c0 5.47-6.75 9.6-6.75 9.6Z" /></svg>;
+  if (kind === "notifications") return <svg viewBox="0 0 24 24" aria-hidden="true"><path {...p} d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path {...p} d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>;
   if (kind === "account") return <svg viewBox="0 0 24 24" aria-hidden="true"><circle {...p} cx="12" cy="8" r="3.5" /><path {...p} d="M4.5 20c0-3.31 3.36-6 7.5-6s7.5 2.69 7.5 6" /></svg>;
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path {...p} d="M12 3.4 19 6.1v4.9c0 4.4-2.9 7.4-7 8.9-4.1-1.5-7-4.5-7-8.9V6.1L12 3.4Z" /><path {...p} d="m8.8 11.9 2.2 2.2 4.2-4.4" /></svg>;
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path {...p} d="M12 3.4 19 6.1v4.9c0 4.4-2.9 7.4-7 8.9-4.1-1.5-7-4.5-7-8.9V6.1L12 3.4Z" /></svg>;
 }
 
 const NAV_HREFS = [
-  { id: "start", href: "/start" },
   { id: "home", href: "/home" },
   { id: "reconnects", href: "/reconnects" },
+  { id: "notifications", href: "/notifications" },
   { id: "account", href: "/account" },
 ] as const;
 
-export function MiniNav() {
+export function MiniNav({ badge }: { badge?: number }) {
   const t = useCopy();
   const path = usePathname();
   const active = NAV_HREFS.find(i => path.startsWith(i.href))?.id ?? "home";
   const navItems = [
-    { ...NAV_HREFS[0], label: t.nav.start },
-    { ...NAV_HREFS[1], label: t.nav.home },
-    { ...NAV_HREFS[2], label: t.nav.reconnects },
-    { ...NAV_HREFS[3], label: t.nav.account },
-  ];
+    { id: "home", href: "/home", label: t.nav.home },
+    { id: "reconnects", href: "/reconnects", label: t.nav.reconnects },
+    { id: "notifications", href: "/notifications", label: "Notifs" },
+    { id: "account", href: "/account", label: t.nav.account },
+  ] as const;
   return (
     <div className="np-nav">
       <div className="np-nav-shell">
         {navItems.map(item => (
-          <Link key={item.id} href={item.href} className={"np-nav-item" + (active === item.id ? " is-active" : "")}>
+          <Link key={item.id} href={item.href} className={"np-nav-item" + (active === item.id ? " is-active" : "")} style={{ position: "relative" }}>
             <NavIcon kind={item.id} />
+            {item.id === "notifications" && badge && badge > 0 ? (
+              <span style={{ position: "absolute", top: 6, right: 8, width: 14, height: 14, borderRadius: 999, background: "var(--danger)", color: "#fff", fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{badge > 9 ? "9+" : badge}</span>
+            ) : null}
             <span>{item.label}</span>
           </Link>
         ))}

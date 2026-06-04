@@ -100,11 +100,31 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   // ── Clock — only active player's timer ticks ──────────────────
   useEffect(() => {
     const id = setInterval(() => {
-      if (turn === "you") setYouLeft(v => Math.max(0, v - 1));
-      else setThemLeft(v => Math.max(0, v - 1));
+      if (turn === "you") {
+        setYouLeft(v => {
+          const next = Math.max(0, v - 1);
+          if (next === 0 && !isAi) {
+            // Time's up — pass turn to partner, show system message
+            setTurn("them");
+            channelRef.current?.send({ type: "broadcast", event: "time_up", payload: {} });
+            setMessages(prev => [...prev, { who: "system", text: "Your time is up. Your partner can now respond — or you can end the conversation." }]);
+          }
+          return next;
+        });
+      } else {
+        setThemLeft(v => {
+          const next = Math.max(0, v - 1);
+          if (next === 0 && !isAi) {
+            // Partner's time is up — it's your turn again
+            setTurn("you");
+            setMessages(prev => [...prev, { who: "system", text: `${partnerName}'s time is up. It's your turn.` }]);
+          }
+          return next;
+        });
+      }
     }, 1000);
     return () => clearInterval(id);
-  }, [turn]);
+  }, [turn, isAi, partnerName]);
 
   // ── Auto-scroll ───────────────────────────────────────────────
   useEffect(() => {
@@ -135,6 +155,12 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
     channel.on("broadcast", { event: "message" }, (payload: any) => {
       setMessages(prev => [...prev, { who: "them", text: payload.payload.text }]);
       setTurn("you");
+    });
+
+    // Partner's time ran out — it's now our turn
+    channel.on("broadcast", { event: "time_up" }, () => {
+      setTurn("you");
+      setMessages(prev => [...prev, { who: "system", text: `${partnerName}'s time is up. It's your turn.` }]);
     });
 
     // Partner ended the conversation → we also navigate to summary

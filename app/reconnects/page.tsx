@@ -2,71 +2,82 @@
 
 export const dynamic = "force-dynamic";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { RECONNECTS } from "@/lib/nuance-data";
-import { StatusBar, Screen, MiniNav } from "@/components/ui";
-import { useCopy } from "@/lib/use-copy";
+import { Screen, MiniNav } from "@/components/ui";
+import { createClient } from "@/lib/supabase/client";
 
-const STATUS_COLOR: Record<string, string> = {
-  Mutual: "var(--positive)",
-  Pending: "var(--text)",
-  Expired: "var(--faint)",
-};
+type Reconnect = { id: string; partner_alias: string; matched_at: string; unread: number };
 
 export default function ReconnectsPage() {
-  const t = useCopy();
   const router = useRouter();
+  const [reconnects, setReconnects] = useState<Reconnect[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) { setLoading(false); return; }
+      const { data } = await supabase
+        .from("reconnects")
+        .select("id, user_a_id, user_b_id, matched_at")
+        .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
+        .eq("user_a_vote", true).eq("user_b_vote", true)
+        .order("matched_at", { ascending: false });
+
+      if (data?.length) {
+        const enriched = await Promise.all(data.map(async r => {
+          const pid = r.user_a_id === user.id ? r.user_b_id : r.user_a_id;
+          const { data: p } = await supabase.from("users").select("alias").eq("id", pid).single();
+          return { id: r.id, partner_alias: p?.alias ?? "Unknown", matched_at: r.matched_at ?? "", unread: 0 };
+        }));
+        setReconnects(enriched);
+      }
+      setLoading(false);
+    });
+  }, []);
 
   return (
     <div className="nuance-phone">
-
-
       <Screen>
         <div style={{ paddingBottom: 18 }}>
-          <p className="np-eyebrow">{t.reconnects.eyebrow}</p>
-          <h1 className="np-display" style={{ fontSize: 30, marginTop: 12 }}>{t.reconnects.title}</h1>
+          <p className="np-eyebrow">Reconnects</p>
+          <h1 className="np-display" style={{ fontSize: 30, marginTop: 12 }}>Private and mutual.</h1>
           <p style={{ margin: "10px 0 0", fontSize: 12.5, lineHeight: 1.45, color: "var(--muted)" }}>
-            {t.reconnects.sub}
+            Only people you both agreed to talk to again.
           </p>
         </div>
 
-        <div style={{ display: "grid", gap: 10 }}>
-          {RECONNECTS.map(r => {
-            const isMutual = r.status === "Mutual";
-            const isExpired = r.status === "Expired";
-            return (
-              <button
-                key={r.name}
-                onClick={() => isMutual ? router.push(`/room/${r.name.toLowerCase()}?mode=${r.mode.toLowerCase().replace(" ", "-")}`) : undefined}
-                disabled={!isMutual}
-                style={{ width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 20, border: "1px solid var(--line-soft)", background: "var(--panel)", cursor: isMutual ? "pointer" : "default", opacity: isExpired ? 0.5 : 1, font: "inherit", color: "var(--text)" }}
-              >
-                <div style={{ position: "relative", flex: "0 0 auto" }}>
-                  <span style={{ width: 36, height: 36, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel-2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 16 }}>
-                    {r.name.charAt(0)}
-                  </span>
-                  {r.unread > 0 && (
-                    <span style={{ position: "absolute", top: -3, right: -3, width: 16, height: 16, borderRadius: 999, background: "var(--accent)", color: "var(--on-accent)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-caps)", fontSize: 8, fontWeight: 700 }}>{r.unread}</span>
-                  )}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <p style={{ margin: 0, fontSize: 13.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name} · {r.mode}</p>
-                    <span className="np-eyebrow" style={{ fontSize: 8, flex: "0 0 auto", marginLeft: 8, color: STATUS_COLOR[r.status] }}>{r.status}</span>
-                  </div>
-                  <p style={{ margin: "4px 0 0", fontSize: 11.5, color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.topic}</p>
-                  <p style={{ margin: "3px 0 0", fontSize: 10, color: "var(--faint)" }}>{r.when}</p>
-                </div>
-                {isMutual && (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        {loading && <div style={{ textAlign: "center", padding: 40 }}><div style={{ width: 32, height: 32, borderRadius: 999, border: "2px solid transparent", borderTopColor: "var(--accent)", animation: "npSpin 0.9s linear infinite", margin: "0 auto" }} /></div>}
 
-        <p style={{ margin: "20px 0 0", fontSize: 11, lineHeight: 1.5, color: "var(--faint)", padding: "12px 14px", borderRadius: 14, border: "1px dashed var(--line-soft)" }}>
-          {t.reconnects.note}
+        {!loading && reconnects.length === 0 && (
+          <div style={{ textAlign: "center", padding: "40px 20px" }}>
+            <p style={{ fontFamily: "var(--font-display)", fontSize: 24, color: "var(--faint)", fontStyle: "italic" }}>Nothing here yet.</p>
+            <p style={{ margin: "10px auto 0", fontSize: 12.5, color: "var(--muted)", maxWidth: "26ch", lineHeight: 1.5 }}>
+              When both of you vote to reconnect after a conversation, they'll appear here.
+            </p>
+          </div>
+        )}
+
+        {!loading && reconnects.length > 0 && (
+          <div style={{ display: "grid", gap: 10 }}>
+            {reconnects.map(r => (
+              <button key={r.id} onClick={() => router.push(`/reconnects/${r.id}` as any)} style={{ width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 20, border: "1px solid var(--line-soft)", background: "var(--panel)", cursor: "pointer", font: "inherit", color: "var(--text)" }}>
+                <span style={{ width: 38, height: 38, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel-2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 17, flex: "0 0 auto" }}>
+                  {r.partner_alias.charAt(0)}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ margin: 0, fontSize: 13.5 }}>{r.partner_alias}</p>
+                  <p className="np-eyebrow" style={{ fontSize: 7.5, marginTop: 4, color: "var(--positive)" }}>Mutual · tap to chat</p>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+              </button>
+            ))}
+          </div>
+        )}
+
+        <p style={{ marginTop: 20, fontSize: 11, lineHeight: 1.5, color: "var(--faint)", padding: "12px 14px", borderRadius: 14, border: "1px dashed var(--line-soft)" }}>
+          Reconnect invites appear in Notifications. Both must say yes before the thread opens.
         </p>
       </Screen>
       <MiniNav />
