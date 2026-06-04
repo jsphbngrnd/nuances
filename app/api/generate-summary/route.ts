@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     .map(m => `${m.who === "you" ? "You" : partnerAlias}: ${m.text}`)
     .join("\n");
 
-  const systemPrompt = `You are generating a brief post-conversation summary for NUANCE. Respond entirely in ${locale === "fr" ? "French" : "English"}.
+  const systemPrompt = `You are generating a brief post-conversation summary for Between Us. Respond entirely in ${locale === "fr" ? "French" : "English"}.
 The conversation was in "${mode}" mode on the topic: "${topic}".
 
 Return a JSON object with exactly these fields — keep everything short and grounded in what was actually said:

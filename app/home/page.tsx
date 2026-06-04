@@ -113,7 +113,7 @@ export default function HomePage() {
           </blockquote>
           <div className="np-hairline" />
           <p style={{ marginTop: 12, fontSize: 10, color: "var(--faint)" }}>{SUMMARY.topic}</p>
-          <p style={{ marginTop: 4, fontSize: 9, color: "var(--faint)", textTransform: "uppercase", letterSpacing: "0.18em", fontFamily: "var(--font-caps)" }}>From the NUANCE community</p>
+          <p style={{ marginTop: 4, fontSize: 9, color: "var(--faint)", textTransform: "uppercase", letterSpacing: "0.18em", fontFamily: "var(--font-caps)" }}>From the Between Us community</p>
         </div>
 
         {/* Reconnects preview — only shown when there are mutual reconnects */}

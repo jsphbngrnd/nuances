@@ -162,7 +162,7 @@ export const copy: Record<Locale, Copy> = {
       heroEyebrow: "Meet strangers through ideas, not profiles.",
       heroTitle: "Human conversations, on demand.",
       heroBody:
-        "NUANCE matches two strangers for short, thoughtful conversations around a topic. No feed, no follower counts, no public profiles. Just structure, safety, and a real exchange.",
+        "Between Us matches two strangers for short, thoughtful conversations around a topic. No feed, no follower counts, no public profiles. Just structure, safety, and a real exchange.",
       liveNow: "Live Now",
       liveNowBody: "People online and available to talk.",
       completion: "Completion",

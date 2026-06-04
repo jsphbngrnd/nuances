@@ -6,7 +6,7 @@ const copy = {
   en: {
     // Landing
     landing: {
-      eyebrow: "Nuance",
+      eyebrow: "Between Us",
       hero: ["Talk to", "someone ", "real."],
       heroSub: "One stranger. One topic. A few honest minutes. No profiles, no feed, no performance.",
       stats: ["online now", "reach the end", "modes"],
@@ -42,11 +42,11 @@ const copy = {
       steps: ["Step one", "Step two", "Step three", "Step four", "Step five"],
       language: {
         title: "Choose your language.",
-        sub: "Everything you read and hear is shown in this language. Talk to anyone in the world — NUANCE auto-translates every message and voice line with AI, so language is never a wall.",
-        note: "Pick French and you can still talk to someone in Spanish, Japanese, Arabic — NUANCE handles the rest.",
+        sub: "Everything you read and hear is shown in this language. Talk to anyone in the world — Between Us auto-translates every message and voice line with AI, so language is never a wall.",
+        note: "Pick French and you can still talk to someone in Spanish, Japanese, Arabic — Between Us handles the rest.",
       },
       intro: {
-        title: "How NUANCE works.",
+        title: "How Between Us works.",
       },
       conduct: {
         title: "The conduct rules.",
@@ -55,7 +55,7 @@ const copy = {
       },
       alias: {
         title: "Your alias.",
-        sub: "NUANCE doesn't need your real name. It gives you a living alias — memorable and still anonymous.",
+        sub: "Between Us doesn't need your real name. It gives you a living alias — memorable and still anonymous.",
         identity: "Your identity",
         evolves: "Stage 1 · Family of the night",
         reroll: "Reroll",
@@ -76,7 +76,7 @@ const copy = {
         reconnectsDesc: "Let people request another conversation after a room.",
       },
       continue: "Continue",
-      finish: "Enter NUANCE",
+      finish: "Enter Between Us",
       saving: "Just a moment…",
     },
     // Home
@@ -111,7 +111,7 @@ const copy = {
       matchFound: "Match found",
       looking: (mode: string) => `Looking for a ${mode} partner…`,
       found: "Found someone for you.",
-      subSearching: "Matching on mode and trust. Language is no barrier — NUANCE translates in real time.",
+      subSearching: "Matching on mode and trust. Language is no barrier — Between Us translates in real time.",
       subRealFound: "Someone real is ready. Bringing you both to the topic.",
       subAiFound: "Your conversation partner is ready. Bringing you to the topic.",
       cancel: "Cancel search",
@@ -223,7 +223,7 @@ const copy = {
 
   fr: {
     landing: {
-      eyebrow: "Nuance",
+      eyebrow: "Between Us",
       hero: ["Parler à", "quelqu'un de ", "vrai."],
       heroSub: "Un inconnu. Un sujet. Quelques minutes honnêtes. Pas de profil, pas de fil, pas de performance.",
       stats: ["en ligne", "vont jusqu'au bout", "modes"],
@@ -256,11 +256,11 @@ const copy = {
       steps: ["Étape un", "Étape deux", "Étape trois", "Étape quatre", "Étape cinq"],
       language: {
         title: "Choisissez votre langue.",
-        sub: "Tout ce que vous lisez et entendez s'affiche dans cette langue. Parlez à n'importe qui dans le monde — NUANCE traduit chaque message et chaque ligne vocale avec l'IA, la langue n'est jamais un obstacle.",
-        note: "Choisissez le français et vous pouvez toujours parler à quelqu'un en espagnol, japonais, arabe — NUANCE s'en charge.",
+        sub: "Tout ce que vous lisez et entendez s'affiche dans cette langue. Parlez à n'importe qui dans le monde — Between Us traduit chaque message et chaque ligne vocale avec l'IA, la langue n'est jamais un obstacle.",
+        note: "Choisissez le français et vous pouvez toujours parler à quelqu'un en espagnol, japonais, arabe — Between Us s.en charge.",
       },
       intro: {
-        title: "Comment fonctionne NUANCE.",
+        title: "Comment fonctionne Between Us.",
       },
       conduct: {
         title: "Les règles de conduite.",
@@ -269,7 +269,7 @@ const copy = {
       },
       alias: {
         title: "Votre alias.",
-        sub: "NUANCE n'a pas besoin de votre vrai nom. Il vous donne un alias vivant — mémorable et toujours anonyme.",
+        sub: "Between Us n.a pas besoin de votre vrai nom. Il vous donne un alias vivant — mémorable et toujours anonyme.",
         identity: "Votre identité",
         evolves: "Niveau 1 · Famille de la nuit",
         reroll: "Changer",
@@ -290,7 +290,7 @@ const copy = {
         reconnectsDesc: "Permettre aux autres de demander une nouvelle conversation après un salon.",
       },
       continue: "Continuer",
-      finish: "Entrer dans NUANCE",
+      finish: "Entrer dans Between Us",
       saving: "Un instant…",
     },
     home: {
@@ -322,7 +322,7 @@ const copy = {
       matchFound: "Match trouvé",
       looking: (mode: string) => `Recherche d'un partenaire ${mode}…`,
       found: "Quelqu'un a été trouvé pour vous.",
-      subSearching: "Matching sur le mode et le score de confiance. La langue n'est pas un obstacle — NUANCE traduit en temps réel.",
+      subSearching: "Matching sur le mode et le score de confiance. La langue n'est pas un obstacle — Between Us traduit en temps réel.",
       subRealFound: "Quelqu'un est prêt. Vous rejoignez le sujet ensemble.",
       subAiFound: "Votre partenaire de conversation est prêt. Direction le sujet.",
       cancel: "Annuler la recherche",

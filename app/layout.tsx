@@ -8,8 +8,8 @@ const sans = localFont({ src: "./fonts/Beausite-Classic-Clear.ttf", variable: "-
 const caps = localFont({ src: "./fonts/Beausite-Classic-Medium.ttf", variable: "--font-caps", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "NUANCE",
-  description: "Meet strangers through ideas, not profiles.",
+  title: "Between Us",
+  description: "Meet strangers through ideas. Real conversations, no profiles.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

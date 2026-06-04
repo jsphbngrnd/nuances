@@ -117,7 +117,7 @@ export const autonomousConversations: AutonomousConversation[] = [
     title: "Debate demo",
     topic: "Is AI making us intellectually lazy?",
     setup:
-      "The room is structured like a compact NUANCE debate between two distinct personas: sharp openings, direct replies, and a clean clash of styles.",
+      "The room is structured like a compact Between Us debate between two distinct personas: sharp openings, direct replies, and a clean clash of styles.",
     participants: [autonomousDemoPersonas[0], autonomousDemoPersonas[1]],
     messages: buildMessages("autonomous-debate-ai", "", [
       {
