@@ -37,7 +37,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const search = useSearchParams();
   const mode = (search.get("mode") || "deep") as keyof typeof MODE_DETAIL;
-  const matchType = (search.get("matchType") || "ai") as RoomMode;
+  const matchType = (search.get("matchType") || "real") as RoomMode; // default real, not ai
   const roomId = search.get("roomId"); // set when matchType === "real"
   const m = MODES.find(x => x.id === mode)!;
 
@@ -102,18 +102,11 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
     if (!roomId || isAi) return;
     const supabase = createClient();
 
-    // Fetch partner alias
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const { data } = await supabase
-        .from("room_participants")
-        .select("user_id, users(alias)")
-        .eq("room_id", roomId)
-        .neq("user_id", user.id)
-        .single();
-      const alias = (data?.users as any)?.alias;
-      if (alias) setPartnerName(alias);
-    });
+    // Fetch partner alias via admin endpoint (RLS blocks reading other users' profiles)
+    fetch(`/api/room-partner?roomId=${roomId}`)
+      .then(r => r.json())
+      .then(d => { if (d.alias) setPartnerName(d.alias); })
+      .catch(() => {});
 
     // Load existing messages first
     supabase.auth.getUser().then(async ({ data: { user } }) => {

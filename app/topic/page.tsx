@@ -7,7 +7,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { MODES, TOPICS, MODE_DETAIL } from "@/lib/nuance-data";
 import { StatusBar, Screen, ModeGlyph } from "@/components/ui";
 import { useCopy } from "@/lib/use-copy";
-import { createClient } from "@/lib/supabase/client";
 
 // Deterministic topic index from roomId — both users get the same topic
 function topicIndexForRoom(roomId: string, poolLength: number): number {
@@ -41,21 +40,13 @@ function TopicPageInner() {
   const [accepted, setAccepted] = useState(false);
   const [partnerAlias, setPartnerAlias] = useState("…");
 
-  // Fetch real partner alias from Supabase
+  // Fetch real partner alias via admin endpoint (RLS blocks reading other users' profiles)
   useEffect(() => {
     if (!isReal || !roomId) return;
-    const supabase = createClient();
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) return;
-      const { data } = await supabase
-        .from("room_participants")
-        .select("user_id, users(alias)")
-        .eq("room_id", roomId)
-        .neq("user_id", user.id)
-        .single();
-      const alias = (data?.users as any)?.alias;
-      if (alias) setPartnerAlias(alias);
-    });
+    fetch(`/api/room-partner?roomId=${roomId}`)
+      .then(r => r.json())
+      .then(d => { if (d.alias) setPartnerAlias(d.alias); })
+      .catch(() => {});
   }, [roomId, isReal]);
 
   const reroll = () => {
