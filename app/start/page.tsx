@@ -6,8 +6,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { MODES, MODE_DETAIL } from "@/lib/nuance-data";
 import { StatusBar, Screen, MiniNav, TopBar, ModeGlyph, ArrowIcon } from "@/components/ui";
+import { useCopy } from "@/lib/use-copy";
 
 function StartPageInner() {
+  const t = useCopy();
   const router = useRouter();
   const params = useSearchParams();
   const [sel, setSel] = useState(params.get("mode") || "deep");
@@ -19,9 +21,9 @@ function StartPageInner() {
 
 
       <Screen>
-        <TopBar sub="Start" title="Choose the exchange." onBack={() => router.push("/home")} />
+        <TopBar sub={t.start.sub} title={t.start.title} onBack={() => router.push("/home")} />
         <p style={{ margin: "0 0 18px", fontSize: 12.5, lineHeight: 1.45, color: "var(--muted)" }}>
-          Pick the tone, structure, and duration before you meet the person.
+          {t.start.body}
         </p>
 
         <div style={{ display: "grid", gap: 10 }}>
@@ -46,7 +48,7 @@ function StartPageInner() {
                   <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--line-soft)", display: "grid", gap: 14 }}>
                     <p style={{ margin: 0, fontSize: 12.5, lineHeight: 1.5, color: "var(--text)" }}>{det.blurb}</p>
                     <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
-                      {([["Structure", det.structure], ["Cadence", det.cadence], ["Tone", det.tone]] as const).map(([k, v]) => (
+                      {([[t.start.structure, det.structure], [t.start.cadence, det.cadence], [t.start.tone, det.tone]] as const).map(([k, v]) => (
                         <div key={k}>
                           <p className="np-eyebrow" style={{ fontSize: 8 }}>{k}</p>
                           <p style={{ margin: "5px 0 0", fontSize: 12 }}>{v}</p>
@@ -69,10 +71,10 @@ function StartPageInner() {
         </div>
 
         <button className="np-btn" style={{ width: "100%", marginTop: 20 }} onClick={() => router.push(`/matchmaking?mode=${sel}`)}>
-          Find someone for {m.name} <ArrowIcon />
+          {t.start.findSomeone(m.name)} <ArrowIcon />
         </button>
         <p style={{ textAlign: "center", marginTop: 14, fontFamily: "var(--font-caps)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--faint)" }}>
-          Any language · auto-translated · trust ≥ 0.45
+          {t.start.caption}
         </p>
       </Screen>
       <MiniNav />

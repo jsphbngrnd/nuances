@@ -6,10 +6,12 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ONB } from "@/lib/nuance-data";
 import { StatusBar, Screen, StepDots, Field, PillGroup, ToggleRow, ArrowIcon, inputStyle } from "@/components/ui";
+import { useCopy } from "@/lib/use-copy";
 
 const TOTAL = 5;
 
 export default function OnboardingPage() {
+  const t = useCopy();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [lang, setLang] = useState("en");
@@ -87,10 +89,10 @@ export default function OnboardingPage() {
           {/* Step 1 — Language */}
           {step === 0 && (
             <div>
-              <p className="np-eyebrow">Step one</p>
-              <h1 className="np-display" style={{ fontSize: 30, marginTop: 12 }}>Choose your language.</h1>
+              <p className="np-eyebrow">{t.onboarding.steps[0]}</p>
+              <h1 className="np-display" style={{ fontSize: 30, marginTop: 12 }}>{t.onboarding.language.title}</h1>
               <p style={{ margin: "12px 0 0", fontSize: 12.5, lineHeight: 1.45, color: "var(--muted)" }}>
-                Everything you read and hear is shown in this language. Talk to anyone in the world — NUANCE auto-translates every message and voice line with AI, so language is never a wall.
+                {t.onboarding.language.sub}
               </p>
               <div style={{ display: "grid", gap: 10, marginTop: 24 }}>
                 {ONB.languages.map(l => (
@@ -107,7 +109,7 @@ export default function OnboardingPage() {
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 18, padding: "10px 14px", borderRadius: 14, border: "1px solid var(--line-soft)", background: "var(--panel)" }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 8h7M9 5v3c0 3.5-2 6-5 7" /><path d="M7 11c1 2 3 3.5 5 4" /><path d="m13 19 4-9 4 9M14.5 16h5" /></svg>
-                <p style={{ margin: 0, fontSize: 11, lineHeight: 1.4, color: "var(--faint)" }}>Pick French and you can still talk to someone in Spanish, Japanese, Arabic — NUANCE handles the rest.</p>
+                <p style={{ margin: 0, fontSize: 11, lineHeight: 1.4, color: "var(--faint)" }}>{t.onboarding.language.note}</p>
               </div>
             </div>
           )}
@@ -115,8 +117,8 @@ export default function OnboardingPage() {
           {/* Step 2 — Intro */}
           {step === 1 && (
             <div>
-              <p className="np-eyebrow">Step two</p>
-              <h1 className="np-display" style={{ fontSize: 30, marginTop: 12 }}>How NUANCE works.</h1>
+              <p className="np-eyebrow">{t.onboarding.steps[1]}</p>
+              <h1 className="np-display" style={{ fontSize: 30, marginTop: 12 }}>{t.onboarding.intro.title}</h1>
               <div style={{ display: "grid", gap: 12, marginTop: 24 }}>
                 {ONB.intro.map(item => (
                   <div key={item.title} style={{ display: "flex", gap: 14, alignItems: "flex-start", padding: "14px 16px", borderRadius: 16, border: "1px solid var(--line-soft)", background: "var(--panel)" }}>
@@ -134,9 +136,9 @@ export default function OnboardingPage() {
           {/* Step 3 — Conduct */}
           {step === 2 && (
             <div>
-              <p className="np-eyebrow">Step three</p>
-              <h1 className="np-display" style={{ fontSize: 30, marginTop: 12 }}>The conduct rules.</h1>
-              <p style={{ margin: "10px 0 0", fontSize: 12.5, color: "var(--muted)" }}>Scroll to the end to continue.</p>
+              <p className="np-eyebrow">{t.onboarding.steps[2]}</p>
+              <h1 className="np-display" style={{ fontSize: 30, marginTop: 12 }}>{t.onboarding.conduct.title}</h1>
+              <p style={{ margin: "10px 0 0", fontSize: 12.5, color: "var(--muted)" }}>{t.onboarding.conduct.sub}</p>
               <div onScroll={onRulesScroll} style={{ maxHeight: 250, overflowY: "auto", marginTop: 18, padding: "16px", borderRadius: 16, border: "1px solid var(--line-soft)", background: "var(--panel)", display: "grid", gap: 14 }}>
                 {ONB.rules.map((rule, i) => (
                   <div key={i} style={{ display: "flex", gap: 12 }}>
@@ -150,7 +152,7 @@ export default function OnboardingPage() {
                 <span style={{ flex: "0 0 auto", width: 20, height: 20, borderRadius: 6, border: "1px solid " + (accepted ? "var(--accent)" : "var(--line)"), background: accepted ? "var(--accent)" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   {accepted && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
                 </span>
-                <span style={{ fontSize: 12.5 }}>I'll speak to the person, not the room.</span>
+                <span style={{ fontSize: 12.5 }}>{t.onboarding.conduct.accept}</span>
               </button>
             </div>
           )}
@@ -158,20 +160,20 @@ export default function OnboardingPage() {
           {/* Step 4 — Alias */}
           {step === 3 && (
             <div>
-              <p className="np-eyebrow">Step four</p>
-              <h1 className="np-display" style={{ fontSize: 30, marginTop: 12 }}>Your alias.</h1>
-              <p style={{ margin: "10px 0 0", fontSize: 12.5, lineHeight: 1.45, color: "var(--muted)" }}>NUANCE doesn't need your real name. It gives you a living alias — memorable and still anonymous.</p>
+              <p className="np-eyebrow">{t.onboarding.steps[3]}</p>
+              <h1 className="np-display" style={{ fontSize: 30, marginTop: 12 }}>{t.onboarding.alias.title}</h1>
+              <p style={{ margin: "10px 0 0", fontSize: 12.5, lineHeight: 1.45, color: "var(--muted)" }}>{t.onboarding.alias.sub}</p>
               <div style={{ position: "relative", marginTop: 24, padding: "28px 22px", borderRadius: 22, border: "1px solid var(--line-soft)", background: "linear-gradient(180deg, var(--panel-2), var(--panel))", overflow: "hidden" }}>
                 <div style={{ position: "absolute", top: -40, left: "50%", transform: "translateX(-50%)", width: 200, height: 160, background: "radial-gradient(circle, var(--glow), transparent 68%)" }} />
-                <p className="np-eyebrow" style={{ position: "relative", fontSize: 9 }}>Your identity</p>
+                <p className="np-eyebrow" style={{ position: "relative", fontSize: 9 }}>{t.onboarding.alias.identity}</p>
                 <p className="np-display" style={{ position: "relative", fontSize: 30, marginTop: 10, fontStyle: "italic" }}>{ONB.aliases[aliasIdx]}</p>
-                <p style={{ position: "relative", margin: "8px 0 0", fontSize: 11, color: "var(--muted)" }}>Stage 1 · Family of the night</p>
+                <p style={{ position: "relative", margin: "8px 0 0", fontSize: 11, color: "var(--muted)" }}>{t.onboarding.alias.evolves}</p>
                 <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
                   <button onClick={() => { if (rerolls < 2) { setRerolls(r => r + 1); setAliasIdx(i => (i + 1) % ONB.aliases.length); } }} disabled={rerolls >= 2} className="np-btn np-btn-ghost" style={{ fontSize: 11, padding: "8px 14px", opacity: rerolls >= 2 ? 0.45 : 1 }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-15 6.7L3 16" /><path d="M3 21v-5h5" /></svg>
-                    Reroll
+                    {t.onboarding.alias.reroll}
                   </button>
-                  <span className="np-eyebrow" style={{ fontSize: 8 }}>{2 - rerolls} reroll{2 - rerolls !== 1 ? "s" : ""} left</span>
+                  <span className="np-eyebrow" style={{ fontSize: 8 }}>{t.onboarding.alias.rerollsLeft(2 - rerolls)}</span>
                 </div>
               </div>
             </div>
@@ -180,29 +182,29 @@ export default function OnboardingPage() {
           {/* Step 5 — Profile */}
           {step === 4 && (
             <div>
-              <p className="np-eyebrow">Step five</p>
-              <h1 className="np-display" style={{ fontSize: 30, marginTop: 12 }}>A few details.</h1>
-              <p style={{ margin: "10px 0 16px", fontSize: 12.5, lineHeight: 1.45, color: "var(--muted)" }}>Optional — but it helps us match you better. Never public.</p>
+              <p className="np-eyebrow">{t.onboarding.steps[4]}</p>
+              <h1 className="np-display" style={{ fontSize: 30, marginTop: 12 }}>{t.onboarding.profile.title}</h1>
+              <p style={{ margin: "10px 0 16px", fontSize: 12.5, lineHeight: 1.45, color: "var(--muted)" }}>{t.onboarding.profile.sub}</p>
               <div style={{ display: "grid", gap: 20 }}>
-                <Field label="Display name (optional)">
-                  <input type="text" placeholder="Or leave blank to use your alias" value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
+                <Field label={t.onboarding.profile.nameLabel}>
+                  <input type="text" placeholder={t.onboarding.profile.namePlaceholder} value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
                 </Field>
-                <Field label="Age range">
+                <Field label={t.onboarding.profile.ageLabel}>
                   <PillGroup options={ONB.ages} value={age} onChange={v => setAge(v as string)} />
                 </Field>
-                <Field label="Country">
+                <Field label={t.onboarding.profile.countryLabel}>
                   <PillGroup options={ONB.countries} value={country} onChange={v => setCountry(v as string)} />
                 </Field>
-                <Field label="Mood right now">
+                <Field label={t.onboarding.profile.moodLabel}>
                   <PillGroup options={ONB.moods} value={mood} onChange={v => setMood(v as string)} />
                 </Field>
-                <Field label="Interests (multi-select)">
+                <Field label={t.onboarding.profile.interestsLabel}>
                   <PillGroup options={ONB.interests} value={interests} onChange={v => setInterests(v as string[])} multi />
                 </Field>
                 <div style={{ padding: "16px 18px", borderRadius: 18, border: "1px solid var(--line-soft)", background: "var(--panel)", display: "grid", gap: 18 }}>
-                  <ToggleRow label="Voice rooms" desc="Use push-to-talk for voice alongside text." on={voice} onToggle={() => setVoice(v => !v)} />
+                  <ToggleRow label={t.onboarding.profile.voiceLabel} desc={t.onboarding.profile.voiceDesc} on={voice} onToggle={() => setVoice(v => !v)} />
                   <div className="np-hairline" />
-                  <ToggleRow label="Reconnects" desc="Let people request another conversation after a room." on={reconnects} onToggle={() => setReconnects(v => !v)} />
+                  <ToggleRow label={t.onboarding.profile.reconnectsLabel} desc={t.onboarding.profile.reconnectsDesc} on={reconnects} onToggle={() => setReconnects(v => !v)} />
                 </div>
               </div>
             </div>
@@ -212,7 +214,7 @@ export default function OnboardingPage() {
         {/* Footer CTA */}
         <div style={{ paddingTop: 14 }}>
           <button className="np-btn" style={{ width: "100%", opacity: canAdvance ? 1 : 0.4 }} disabled={!canAdvance || saving} onClick={next}>
-            {saving ? "Just a moment…" : step === TOTAL - 1 ? "Enter NUANCE" : "Continue"} {!saving && <ArrowIcon />}
+            {saving ? t.onboarding.saving : step === TOTAL - 1 ? t.onboarding.finish : t.onboarding.continue} {!saving && <ArrowIcon />}
           </button>
         </div>
       </div>

@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { useRouter } from "next/navigation";
 import { RECONNECTS } from "@/lib/nuance-data";
 import { StatusBar, Screen, MiniNav } from "@/components/ui";
+import { useCopy } from "@/lib/use-copy";
 
 const STATUS_COLOR: Record<string, string> = {
   Mutual: "var(--positive)",
@@ -13,6 +14,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function ReconnectsPage() {
+  const t = useCopy();
   const router = useRouter();
 
   return (
@@ -21,10 +23,10 @@ export default function ReconnectsPage() {
 
       <Screen>
         <div style={{ paddingBottom: 18 }}>
-          <p className="np-eyebrow">Reconnects</p>
-          <h1 className="np-display" style={{ fontSize: 30, marginTop: 12 }}>Private and mutual.</h1>
+          <p className="np-eyebrow">{t.reconnects.eyebrow}</p>
+          <h1 className="np-display" style={{ fontSize: 30, marginTop: 12 }}>{t.reconnects.title}</h1>
           <p style={{ margin: "10px 0 0", fontSize: 12.5, lineHeight: 1.45, color: "var(--muted)" }}>
-            No open DMs. If both people say yes, a reconnect thread opens here.
+            {t.reconnects.sub}
           </p>
         </div>
 
@@ -64,7 +66,7 @@ export default function ReconnectsPage() {
         </div>
 
         <p style={{ margin: "20px 0 0", fontSize: 11, lineHeight: 1.5, color: "var(--faint)", padding: "12px 14px", borderRadius: 14, border: "1px dashed var(--line-soft)" }}>
-          Reconnects expire after 30 days of silence. Mutual threads are private — only the two of you can see them.
+          {t.reconnects.note}
         </p>
       </Screen>
       <MiniNav />

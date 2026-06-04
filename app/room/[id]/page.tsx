@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MODES, MODE_DETAIL, TOPICS, AI_PERSONAS } from "@/lib/nuance-data";
 import { StatusBar, LiveDot } from "@/components/ui";
+import { useCopy } from "@/lib/use-copy";
 
 const PER = 5 * 60;
 
@@ -29,6 +30,7 @@ function selectPersona(mode: string, personaId?: string | null) {
 }
 
 function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
+  const t = useCopy();
   const router = useRouter();
   const search = useSearchParams();
   const mode = (search.get("mode") || "deep") as keyof typeof MODE_DETAIL;
@@ -63,7 +65,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
         mode, topic,
         personaId: persona?.id,
         messages: [],
-        userMessage: `[Opening] Start the conversation on this topic: "${topic}". Give a brief, genuine opening thought — 1-2 sentences. Don't ask a question yet, just open.`,
+        userMessage: t.room.openingPrompt(topic),
       }),
     })
       .then(r => r.json())
@@ -169,7 +171,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
       const data = await res.json();
       setMessages(prev => [...prev, { who: "them", text: data.reply, translated: partnerLang !== "English" }]);
     } catch {
-      setMessages(prev => [...prev, { who: "system", text: "Connection dropped momentarily." }]);
+      setMessages(prev => [...prev, { who: "system", text: t.room.connectionDrop }]);
     } finally {
       setTyping(false);
       setActive("you");
@@ -206,8 +208,8 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
           </button>
           {menu && (
             <div style={{ position: "absolute", top: 44, right: 0, zIndex: 20, width: 180, borderRadius: 16, border: "1px solid var(--line)", background: "rgba(14,14,16,0.97)", backdropFilter: "blur(18px)", padding: 6, boxShadow: "0 18px 50px rgba(0,0,0,0.5)" }}>
-              {[["Report this person", "var(--danger)"], ["Block & leave", "var(--danger)"], ["Mute notifications", "var(--text)"]].map(([t, c]) => (
-                <button key={t} onClick={() => setMenu(false)} style={{ display: "block", width: "100%", textAlign: "left", padding: "11px 12px", borderRadius: 11, border: "none", background: "transparent", color: c, cursor: "pointer", font: "inherit", fontSize: 12.5 }}>{t}</button>
+              {[[t.room.report, "var(--danger)"], [t.room.block, "var(--danger)"], [t.room.mute, "var(--text)"]].map(([label, c]) => (
+                <button key={label} onClick={() => setMenu(false)} style={{ display: "block", width: "100%", textAlign: "left", padding: "11px 12px", borderRadius: 11, border: "none", background: "transparent", color: c, cursor: "pointer", font: "inherit", fontSize: 12.5 }}>{label}</button>
               ))}
             </div>
           )}
@@ -215,7 +217,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
 
         {/* Blitz clocks */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
-          {([{ key: "them", label: partnerName, val: themLeft }, { key: "you", label: "You", val: youLeft }] as const).map(c => {
+          {([{ key: "them", label: partnerName, val: themLeft }, { key: "you", label: t.room.youLabel, val: youLeft }] as const).map(c => {
             const on = active === c.key;
             const low = c.val <= 30;
             return (
@@ -243,7 +245,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
             {partnerLang !== "English" && (
               <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, padding: "6px 12px", borderRadius: 999, border: "1px solid var(--line-soft)", background: "var(--panel)" }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M5 8h7M9 5v3c0 3.5-2 6-5 7" /><path d="M7 11c1 2 3 3.5 5 4" /><path d="m13 19 4-9 4 9M14.5 16h5" /></svg>
-                <span className="np-eyebrow" style={{ fontSize: 8 }}>Auto-translated · {partnerName} speaks {partnerLang}</span>
+                <span className="np-eyebrow" style={{ fontSize: 8 }}>{t.room.translatedBanner(partnerName, partnerLang)}</span>
               </div>
             )}
           </div>
@@ -266,7 +268,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
                 {msg.translated && (
                   <div style={{ display: "flex", alignItems: "center", gap: 5, margin: "5px 4px 0" }}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 8h7M9 5v3c0 3.5-2 6-5 7" /><path d="M7 11c1 2 3 3.5 5 4" /><path d="m13 19 4-9 4 9M14.5 16h5" /></svg>
-                    <span style={{ fontSize: 10, color: "var(--faint)" }}>Translated · {partnerLang}</span>
+                    <span style={{ fontSize: 10, color: "var(--faint)" }}>{t.room.translated(partnerLang)}</span>
                   </div>
                 )}
               </div>
@@ -280,7 +282,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
                   <span key={i} style={{ width: 6, height: 6, borderRadius: 999, background: "var(--muted)", animation: `npType 1.2s ease-in-out ${i * 0.2}s infinite` }} />
                 ))}
                 <span style={{ marginLeft: 4, fontSize: 10, color: "var(--faint)", fontFamily: "var(--font-caps)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                  Typing · {partnerLang}
+                  {t.room.typingLabel(partnerLang)}
                 </span>
               </div>
             </div>
@@ -288,7 +290,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
 
           {blocked && (
             <div style={{ alignSelf: "flex-end", maxWidth: "84%", padding: "9px 14px", borderRadius: 14, border: "1px solid var(--danger)", background: "rgba(224,121,111,0.08)" }}>
-              <p style={{ margin: 0, fontSize: 11, lineHeight: 1.4, color: "var(--danger)" }}>Held by moderation — this message wasn't delivered.</p>
+              <p style={{ margin: 0, fontSize: 11, lineHeight: 1.4, color: "var(--danger)" }}>{t.room.heldMessage}</p>
             </div>
           )}
         </div>
@@ -322,7 +324,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
               value={draft}
               onChange={e => setDraft(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && send()}
-              placeholder={listening ? "Speaking… press send when done" : "Say something honest…"}
+              placeholder={listening ? t.room.voicePlaceholder : t.room.placeholder}
               style={{ flex: 1, padding: "11px 14px", borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)", color: "var(--text)", fontSize: 16, outline: "none" }}
             />
 
@@ -336,7 +338,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
             </button>
           </div>
           <p style={{ textAlign: "center", marginTop: 8, fontFamily: "var(--font-caps)", fontSize: 8, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--faint)" }}>
-            {listening ? "Mic is live — your speech appears above" : "Every message is moderated · report & block always available"}
+            {listening ? t.room.micLive : t.room.caption}
           </p>
         </div>
       </div>

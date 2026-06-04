@@ -5,8 +5,10 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { StatusBar, Screen, ArrowIcon } from "@/components/ui";
+import { useCopy } from "@/lib/use-copy";
 
 export default function ConfirmingPage() {
+  const t = useCopy();
   const router = useRouter();
   const [done, setDone] = useState(false);
 
@@ -33,16 +35,14 @@ export default function ConfirmingPage() {
             )}
           </div>
           <h1 className="np-display" style={{ fontSize: 26, marginTop: 26 }}>
-            {done ? "Check your email." : "Almost there…"}
+            {done ? t.confirming.done : t.confirming.pending}
           </h1>
           <p style={{ margin: "12px auto 0", fontSize: 12.5, lineHeight: 1.45, color: "var(--muted)", maxWidth: "28ch" }}>
-            {done
-              ? "We sent a confirmation link. Click it to activate your account and begin onboarding."
-              : "Setting things up. This takes a moment."}
+            {done ? t.confirming.doneSub : t.confirming.pendingSub}
           </p>
           {done && (
             <button className="np-btn np-btn-ghost" style={{ marginTop: 24 }} onClick={() => router.push("/auth?tab=signin")}>
-              Back to sign in <ArrowIcon />
+              {t.confirming.back} <ArrowIcon />
             </button>
           )}
         </div>

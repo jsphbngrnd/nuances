@@ -6,20 +6,22 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MODES } from "@/lib/nuance-data";
 import { StatusBar, Screen, LiveDot, ModeGlyph, ArrowIcon } from "@/components/ui";
+import { useCopy } from "@/lib/use-copy";
 
 export default function LandingPage() {
+  const t = useCopy();
   const router = useRouter();
   const [online, setOnline] = useState(142);
 
   useEffect(() => {
-    const t = setInterval(() => setOnline(o => Math.min(210, Math.max(120, o + (Math.floor(Math.random() * 7) - 3)))), 2600);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setOnline(o => Math.min(210, Math.max(120, o + (Math.floor(Math.random() * 7) - 3)))), 2600);
+    return () => clearInterval(timer);
   }, []);
 
   const stats = [
-    { n: online, l: "online now", live: true },
-    { n: "72%", l: "reach the end" },
-    { n: MODES.length, l: "modes" },
+    { n: online, l: t.landing.stats[0], live: true },
+    { n: "72%", l: t.landing.stats[1] },
+    { n: MODES.length, l: t.landing.stats[2] },
   ];
 
   return (
@@ -31,12 +33,12 @@ export default function LandingPage() {
         <div style={{ position: "relative", textAlign: "center", paddingTop: 30 }}>
           <div style={{ position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)", width: 280, height: 220, background: "radial-gradient(circle, var(--glow), transparent 68%)", pointerEvents: "none" }} />
           <div style={{ position: "relative", fontFamily: "var(--font-display)", fontSize: 34 }}>☾</div>
-          <p className="np-eyebrow" style={{ position: "relative", marginTop: 18 }}>Nuance</p>
+          <p className="np-eyebrow" style={{ position: "relative", marginTop: 18 }}>{t.landing.eyebrow}</p>
           <h1 className="np-display" style={{ position: "relative", fontSize: 44, marginTop: 16, lineHeight: 0.96 }}>
-            Talk to<br />someone <span style={{ fontStyle: "italic" }}>real.</span>
+            {t.landing.hero[0]}<br />{t.landing.hero[1]}<span style={{ fontStyle: "italic" }}>{t.landing.hero[2]}</span>
           </h1>
           <p style={{ position: "relative", margin: "18px auto 0", fontSize: 13.5, lineHeight: 1.5, color: "var(--muted)", maxWidth: "30ch" }}>
-            One stranger. One topic. A few honest minutes. No profiles, no feed, no performance.
+            {t.landing.heroSub}
           </p>
         </div>
 
@@ -55,7 +57,7 @@ export default function LandingPage() {
 
         {/* Mode grid */}
         <div style={{ marginTop: 26 }}>
-          <p className="np-eyebrow">Four ways to talk</p>
+          <p className="np-eyebrow">{t.landing.modesEyebrow}</p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 14 }}>
             {MODES.map(m => (
               <div key={m.id} style={{ borderRadius: 20, border: "1px solid var(--line-soft)", background: "linear-gradient(180deg, var(--panel-2), var(--panel))", padding: 16 }}>
@@ -73,13 +75,13 @@ export default function LandingPage() {
         {/* CTAs */}
         <div style={{ display: "grid", gap: 10, marginTop: 28 }}>
           <button className="np-btn" style={{ width: "100%" }} onClick={() => router.push("/auth?tab=signup")}>
-            Create your account <ArrowIcon />
+            {t.landing.ctaPrimary} <ArrowIcon />
           </button>
           <button className="np-btn np-btn-ghost" style={{ width: "100%" }} onClick={() => router.push("/auth?tab=signin")}>
-            Sign in
+            {t.landing.ctaSecondary}
           </button>
           <button onClick={() => router.push("/demo")} style={{ background: "transparent", border: "none", color: "var(--faint)", fontFamily: "var(--font-caps)", fontSize: 10, letterSpacing: "0.22em", textTransform: "uppercase", cursor: "pointer", marginTop: 6 }}>
-            Watch a live demo →
+            {t.landing.ctaDemo}
           </button>
         </div>
       </Screen>

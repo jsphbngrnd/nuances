@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MODES, SUMMARY } from "@/lib/nuance-data";
 import { StatusBar, Screen, MiniNav, LiveDot, ModeGlyph, ArrowIcon } from "@/components/ui";
+import { useCopy } from "@/lib/use-copy";
 
 const ALIAS = "OracleDuVendredi";
 const RECONNECTS_PREVIEW = [
@@ -14,6 +15,7 @@ const RECONNECTS_PREVIEW = [
 ];
 
 export default function HomePage() {
+  const t = useCopy();
   const router = useRouter();
   const [online, setOnline] = useState(142);
   const [selected, setSelected] = useState("deep");
@@ -33,28 +35,28 @@ export default function HomePage() {
           <span style={{ width: 28, height: 28, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel-2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 13, flex: "0 0 auto" }}>
             {ALIAS.charAt(0)}
           </span>
-          <span className="np-eyebrow" style={{ fontSize: 9, flex: 1, textAlign: "left" }}>Good evening · {ALIAS}</span>
+          <span className="np-eyebrow" style={{ fontSize: 9, flex: 1, textAlign: "left" }}>{t.home.greeting} · {ALIAS}</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
         </button>
 
         {/* Hero */}
         <div style={{ position: "relative", textAlign: "center", marginBottom: 28 }}>
           <div style={{ position: "absolute", top: -20, left: "50%", transform: "translateX(-50%)", width: 300, height: 200, background: "radial-gradient(circle, var(--glow), transparent 68%)", pointerEvents: "none" }} />
-          <h1 className="np-display" style={{ position: "relative", fontSize: 38 }}>Talk to someone real.</h1>
+          <h1 className="np-display" style={{ position: "relative", fontSize: 38 }}>{t.home.title}</h1>
           <p style={{ position: "relative", margin: "12px auto 0", fontSize: 12.5, lineHeight: 1.5, color: "var(--muted)", maxWidth: "28ch" }}>
-            A calmer social product: structured rooms, private reconnects, and no performance layer.
+            {t.home.sub}
           </p>
           <div style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 8, marginTop: 16, padding: "8px 15px", borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)" }}>
             <LiveDot size={7} />
-            <span className="np-eyebrow" style={{ fontSize: 9 }}>{online} online now</span>
+            <span className="np-eyebrow" style={{ fontSize: 9 }}>{online} {t.home.online}</span>
           </div>
         </div>
 
         {/* Mode grid */}
         <div style={{ marginBottom: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
-            <span className="np-eyebrow" style={{ fontSize: 9 }}>Pick the atmosphere</span>
-            <span className="np-eyebrow" style={{ fontSize: 9 }}>Four modes</span>
+            <span className="np-eyebrow" style={{ fontSize: 9 }}>{t.home.pickAtmosphere}</span>
+            <span className="np-eyebrow" style={{ fontSize: 9 }}>{t.home.fourModes}</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             {MODES.map(m => {
@@ -72,7 +74,7 @@ export default function HomePage() {
             })}
           </div>
           <button className="np-btn" style={{ width: "100%", marginTop: 12 }} onClick={() => router.push(`/start?mode=${selected}`)}>
-            Open exchange modes <ArrowIcon />
+            {t.home.openModes} <ArrowIcon />
           </button>
         </div>
 
@@ -80,7 +82,7 @@ export default function HomePage() {
         <div style={{ position: "relative", padding: "22px 20px", borderRadius: 28, border: "1px solid var(--line-soft)", background: "linear-gradient(180deg, var(--panel-2), var(--panel))", overflow: "hidden", marginBottom: 20 }}>
           <div style={{ position: "absolute", top: -40, left: "50%", transform: "translateX(-50%)", width: 220, height: 180, background: "radial-gradient(circle, var(--glow), transparent 68%)" }} />
           <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, marginBottom: 14 }}>
-            <p className="np-eyebrow" style={{ fontSize: 9 }}>Quote of the day</p>
+            <p className="np-eyebrow" style={{ fontSize: 9 }}>{t.home.quoteEyebrow}</p>
             <span className="np-chip" style={{ padding: "4px 10px", fontSize: 9 }}>Deep</span>
           </div>
           <blockquote className="np-display" style={{ position: "relative", fontSize: 27, fontStyle: "italic", lineHeight: 1.1, marginBottom: 16 }}>
@@ -94,7 +96,7 @@ export default function HomePage() {
         {/* Reconnects preview */}
         <div style={{ borderRadius: 22, border: "1px solid var(--line-soft)", background: "var(--panel)", marginBottom: 8, overflow: "hidden" }}>
           <div style={{ padding: "16px 18px 14px" }}>
-            <p className="np-eyebrow" style={{ fontSize: 9 }}>Reconnects</p>
+            <p className="np-eyebrow" style={{ fontSize: 9 }}>{t.home.reconnectsEyebrow}</p>
           </div>
           <div style={{ display: "grid", gap: 0 }}>
             {RECONNECTS_PREVIEW.map((r, i) => (
@@ -109,7 +111,7 @@ export default function HomePage() {
             ))}
           </div>
           <div style={{ padding: "12px 18px", borderTop: "1px solid var(--line-soft)" }}>
-            <button onClick={() => router.push("/reconnects")} style={{ background: "transparent", border: "none", color: "var(--faint)", fontFamily: "var(--font-caps)", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", cursor: "pointer", padding: 0 }}>See all reconnects →</button>
+            <button onClick={() => router.push("/reconnects")} style={{ background: "transparent", border: "none", color: "var(--faint)", fontFamily: "var(--font-caps)", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", cursor: "pointer", padding: 0 }}>{t.home.reconnectsLink}</button>
           </div>
         </div>
       </Screen>

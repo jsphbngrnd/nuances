@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Screen, TopBar, ArrowIcon } from "@/components/ui";
+import { useCopy } from "@/lib/use-copy";
 
 const PERSONAS = [
   { name: "OracleDuVendredi", glyph: "⚔", color: "#d98a6a" },
@@ -25,6 +26,7 @@ const SCRIPT = [
 ];
 
 export default function DemoPage() {
+  const t = useCopy();
   const router = useRouter();
   const [shown, setShown] = useState(0);
   const [typing, setTyping] = useState(true);
@@ -51,7 +53,7 @@ export default function DemoPage() {
     <div className="nuance-phone">
       <Screen scroll={false} style={{ display: "flex", flexDirection: "column" }}>
         <TopBar
-          sub="Live demo · auto-playing"
+          sub={t.demo.sub}
           onBack={() => router.push("/")}
           right={<span className="np-chip" style={{ padding: "5px 11px", fontSize: 9 }}>Deep</span>}
         />
@@ -60,7 +62,7 @@ export default function DemoPage() {
         <div style={{ textAlign: "center", padding: "8px 0 20px" }}>
           <p className="np-eyebrow" style={{ fontSize: 8.5, marginBottom: 10 }}>Topic</p>
           <p style={{ fontFamily: "var(--font-display)", fontSize: 18, fontStyle: "italic", lineHeight: 1.15, color: "var(--text)" }}>
-            "When do you feel most alive?"
+            "{t.demo.topic}"
           </p>
         </div>
 
@@ -116,7 +118,7 @@ export default function DemoPage() {
         {/* CTA */}
         <div style={{ paddingTop: 14 }}>
           <button className="np-btn" style={{ width: "100%" }} onClick={() => router.push("/auth?tab=signup")}>
-            Try it for real <ArrowIcon />
+            {t.demo.cta} <ArrowIcon />
           </button>
         </div>
       </Screen>

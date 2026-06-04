@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { useCopy } from "@/lib/use-copy";
 
 /* ── LiveDot ── */
 export function LiveDot({ size = 7 }: { size?: number }) {
@@ -52,20 +53,27 @@ function NavIcon({ kind }: { kind: string }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path {...p} d="M12 3.4 19 6.1v4.9c0 4.4-2.9 7.4-7 8.9-4.1-1.5-7-4.5-7-8.9V6.1L12 3.4Z" /><path {...p} d="m8.8 11.9 2.2 2.2 4.2-4.4" /></svg>;
 }
 
-const NAV_ITEMS = [
-  { id: "start", label: "Start", href: "/start" },
-  { id: "home", label: "Home", href: "/home" },
-  { id: "reconnects", label: "Reconnects", href: "/reconnects" },
-  { id: "account", label: "Account", href: "/account" },
+const NAV_HREFS = [
+  { id: "start", href: "/start" },
+  { id: "home", href: "/home" },
+  { id: "reconnects", href: "/reconnects" },
+  { id: "account", href: "/account" },
 ] as const;
 
 export function MiniNav() {
+  const t = useCopy();
   const path = usePathname();
-  const active = NAV_ITEMS.find(i => path.startsWith(i.href))?.id ?? "home";
+  const active = NAV_HREFS.find(i => path.startsWith(i.href))?.id ?? "home";
+  const navItems = [
+    { ...NAV_HREFS[0], label: t.nav.start },
+    { ...NAV_HREFS[1], label: t.nav.home },
+    { ...NAV_HREFS[2], label: t.nav.reconnects },
+    { ...NAV_HREFS[3], label: t.nav.account },
+  ];
   return (
     <div className="np-nav">
       <div className="np-nav-shell">
-        {NAV_ITEMS.map(item => (
+        {navItems.map(item => (
           <Link key={item.id} href={item.href} className={"np-nav-item" + (active === item.id ? " is-active" : "")}>
             <NavIcon kind={item.id} />
             <span>{item.label}</span>

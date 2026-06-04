@@ -6,8 +6,10 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MODES, TOPICS, MODE_DETAIL } from "@/lib/nuance-data";
 import { StatusBar, Screen, ModeGlyph } from "@/components/ui";
+import { useCopy } from "@/lib/use-copy";
 
 function TopicPageInner() {
+  const t = useCopy();
   const router = useRouter();
   const params = useSearchParams();
   const mode = (params.get("mode") || "deep") as keyof typeof TOPICS;
@@ -37,7 +39,7 @@ function TopicPageInner() {
         </div>
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-          <p className="np-eyebrow" style={{ textAlign: "center" }}>You both see the same topic</p>
+          <p className="np-eyebrow" style={{ textAlign: "center" }}>{t.topic.eyebrow}</p>
           <div style={{ position: "relative", marginTop: 18, padding: "40px 26px", borderRadius: 28, border: "1px solid var(--line-soft)", background: "linear-gradient(180deg, var(--panel-2), var(--panel))", textAlign: "center", overflow: "hidden" }}>
             <div style={{ position: "absolute", top: -50, left: "50%", transform: "translateX(-50%)", width: 240, height: 200, background: "radial-gradient(circle, var(--glow), transparent 68%)" }} />
             <span style={{ position: "relative", fontFamily: "var(--font-display)", fontSize: 18, opacity: 0.7 }}>"</span>
@@ -54,7 +56,7 @@ function TopicPageInner() {
           {/* Partner status */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 22, fontSize: 12, color: "var(--muted)" }}>
             <span style={{ width: 24, height: 24, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel-2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 11 }}>V</span>
-            <span>VoyageuseSereine {accepted ? "is ready too" : "is deciding…"}</span>
+            <span>VoyageuseSereine {accepted ? t.topic.partnerReady : t.topic.partnerDeciding}</span>
           </div>
         </div>
 
@@ -62,17 +64,17 @@ function TopicPageInner() {
           {!accepted ? (
             <>
               <button className="np-btn" style={{ width: "100%" }} onClick={() => setAccepted(true)}>
-                Accept this topic
+                {t.topic.accept}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </button>
               <button onClick={reroll} disabled={rerolls >= 2} className="np-btn np-btn-ghost" style={{ width: "100%", opacity: rerolls >= 2 ? 0.45 : 1 }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-15 6.7L3 16" /><path d="M3 21v-5h5" /></svg>
-                {rerolls >= 2 ? "No rerolls left — rematch" : `Reroll topic · ${2 - rerolls} left`}
+                {rerolls >= 2 ? t.topic.noRerolls : t.topic.reroll(2 - rerolls)}
               </button>
             </>
           ) : (
             <button className="np-btn" style={{ width: "100%" }} onClick={() => router.push(`/room/live?mode=${mode}`)}>
-              Both accepted — enter room
+              {t.topic.bothAccepted}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>
           )}

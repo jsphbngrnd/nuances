@@ -6,10 +6,12 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MODES, MODE_DETAIL } from "@/lib/nuance-data";
 import { StatusBar, Screen, ModeGlyph } from "@/components/ui";
+import { useCopy } from "@/lib/use-copy";
 
 const REAL_MATCH_TIMEOUT_MS = 8000;
 
 function MatchmakingPageInner() {
+  const t = useCopy();
   const router = useRouter();
   const params = useSearchParams();
   const mode = (params.get("mode") || "deep") as keyof typeof MODE_DETAIL;
@@ -89,17 +91,17 @@ function MatchmakingPageInner() {
           </div>
 
           <p className="np-eyebrow" style={{ marginTop: 30 }}>
-            {matched ? (matchType === "real" ? "Real match found" : "Match found") : "Searching"}
+            {matched ? (matchType === "real" ? t.matchmaking.realMatch : t.matchmaking.matchFound) : t.matchmaking.searching}
           </p>
           <h1 className="np-display" style={{ fontSize: 30, marginTop: 14, maxWidth: "16ch" }}>
-            {matched ? "Found someone for you." : `Looking for a ${m.name.toLowerCase()} partner…`}
+            {matched ? t.matchmaking.found : t.matchmaking.looking(m.name.toLowerCase())}
           </h1>
           <p style={{ margin: "14px auto 0", fontSize: 12.5, lineHeight: 1.45, color: "var(--muted)", maxWidth: "28ch" }}>
             {matched
               ? matchType === "real"
-                ? "Someone real is ready. Bringing you both to the topic."
-                : "Your conversation partner is ready. Bringing you to the topic."
-              : "Matching on mode and trust. Language is no barrier — NUANCE translates in real time."}
+                ? t.matchmaking.subRealFound
+                : t.matchmaking.subAiFound
+              : t.matchmaking.subSearching}
           </p>
 
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 22, padding: "8px 15px", borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)" }}>
@@ -110,7 +112,7 @@ function MatchmakingPageInner() {
 
         <div style={{ paddingTop: 10 }}>
           <button className="np-btn np-btn-ghost" style={{ width: "100%" }} onClick={() => router.push("/start")}>
-            Cancel search
+            {t.matchmaking.cancel}
           </button>
         </div>
       </Screen>
