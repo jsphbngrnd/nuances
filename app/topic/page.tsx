@@ -2,11 +2,22 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MODES, TOPICS, MODE_DETAIL } from "@/lib/nuance-data";
 import { StatusBar, Screen, ModeGlyph } from "@/components/ui";
 import { useCopy } from "@/lib/use-copy";
+import { createClient } from "@/lib/supabase/client";
+
+// Deterministic topic index from roomId — both users get the same topic
+function topicIndexForRoom(roomId: string, poolLength: number): number {
+  let hash = 0;
+  for (let i = 0; i < roomId.length; i++) {
+    hash = ((hash << 5) - hash) + roomId.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash) % poolLength;
+}
 
 function TopicPageInner() {
   const t = useCopy();
@@ -15,20 +26,54 @@ function TopicPageInner() {
   const mode = (params.get("mode") || "deep") as keyof typeof TOPICS;
   const matchType = params.get("matchType") || "ai";
   const roomId = params.get("roomId");
+  const isReal = matchType === "real" && !!roomId;
   const m = MODES.find(x => x.id === mode)!;
   const pool = TOPICS[mode];
-  const [idx, setIdx] = useState(() => Math.floor(Math.random() * pool.length));
+
+  // Real rooms: deterministic topic from roomId so both users see the same one
+  // AI rooms: random
+  const [idx, setIdx] = useState(() =>
+    isReal && roomId
+      ? topicIndexForRoom(roomId, pool.length)
+      : Math.floor(Math.random() * pool.length)
+  );
   const [rerolls, setRerolls] = useState(0);
   const [accepted, setAccepted] = useState(false);
+  const [partnerAlias, setPartnerAlias] = useState("…");
+
+  // Fetch real partner alias from Supabase
+  useEffect(() => {
+    if (!isReal || !roomId) return;
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("room_participants")
+        .select("user_id, users(alias)")
+        .eq("room_id", roomId)
+        .neq("user_id", user.id)
+        .single();
+      const alias = (data?.users as any)?.alias;
+      if (alias) setPartnerAlias(alias);
+    });
+  }, [roomId, isReal]);
 
   const reroll = () => {
-    if (rerolls < 2) { setRerolls(r => r + 1); setIdx(i => (i + 1) % pool.length); }
+    if (rerolls < 2) {
+      setRerolls(r => r + 1);
+      setIdx(i => (i + 1) % pool.length);
+    }
+  };
+
+  const enterRoom = () => {
+    const dest = isReal
+      ? `/room/${roomId}?mode=${mode}&matchType=real&topic=${encodeURIComponent(pool[idx])}`
+      : `/room/live?mode=${mode}&matchType=ai&topic=${encodeURIComponent(pool[idx])}`;
+    router.push(dest as any);
   };
 
   return (
     <div className="nuance-phone">
-
-
       <Screen scroll={false} style={{ display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "4px 0 14px" }}>
           <button onClick={() => router.push(`/matchmaking?mode=${mode}`)} style={{ width: 36, height: 36, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)", color: "var(--text)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -57,8 +102,10 @@ function TopicPageInner() {
 
           {/* Partner status */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 22, fontSize: 12, color: "var(--muted)" }}>
-            <span style={{ width: 24, height: 24, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel-2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 11 }}>V</span>
-            <span>VoyageuseSereine {accepted ? t.topic.partnerReady : t.topic.partnerDeciding}</span>
+            <span style={{ width: 24, height: 24, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel-2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 11 }}>
+              {partnerAlias.charAt(0)}
+            </span>
+            <span>{partnerAlias} {accepted ? t.topic.partnerReady : t.topic.partnerDeciding}</span>
           </div>
         </div>
 
@@ -69,18 +116,13 @@ function TopicPageInner() {
                 {t.topic.accept}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
               </button>
-              <button onClick={reroll} disabled={rerolls >= 2} className="np-btn np-btn-ghost" style={{ width: "100%", opacity: rerolls >= 2 ? 0.45 : 1 }}>
+              <button onClick={reroll} disabled={rerolls >= 2 || isReal} className="np-btn np-btn-ghost" style={{ width: "100%", opacity: (rerolls >= 2 || isReal) ? 0.45 : 1 }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-15 6.7L3 16" /><path d="M3 21v-5h5" /></svg>
-                {rerolls >= 2 ? t.topic.noRerolls : t.topic.reroll(2 - rerolls)}
+                {isReal ? "Topic set for this room" : rerolls >= 2 ? t.topic.noRerolls : t.topic.reroll(2 - rerolls)}
               </button>
             </>
           ) : (
-            <button className="np-btn" style={{ width: "100%" }} onClick={() => {
-              const dest = matchType === "real" && roomId
-                ? `/room/${roomId}?mode=${mode}&matchType=real`
-                : `/room/live?mode=${mode}&matchType=ai`;
-              router.push(dest as any);
-            }}>
+            <button className="np-btn" style={{ width: "100%" }} onClick={enterRoom}>
               {t.topic.bothAccepted}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>

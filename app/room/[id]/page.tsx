@@ -42,12 +42,20 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   const m = MODES.find(x => x.id === mode)!;
 
   const topicPool = TOPICS[mode];
-  const topicRef = useRef(topicPool[Math.floor(Math.random() * topicPool.length)]);
+  // Real rooms: topic passed from topic page (same for both users)
+  // AI rooms: random
+  const topicRef = useRef(
+    search.get("topic")
+      ? decodeURIComponent(search.get("topic")!)
+      : topicPool[Math.floor(Math.random() * topicPool.length)]
+  );
   const topic = topicRef.current;
 
   const personaRef = useRef(selectPersona(mode, search.get("personaId")));
   const persona = personaRef.current;
-  const partnerName = matchType === "real" ? "Stranger" : (persona?.alias ?? "PatientEcho");
+  const [partnerName, setPartnerName] = useState(
+    matchType === "real" ? "…" : (persona?.alias ?? "PatientEcho")
+  );
   const partnerLang = matchType === "real" ? "English" : (persona?.language ?? "English");
 
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -93,6 +101,19 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   useEffect(() => {
     if (!roomId || isAi) return;
     const supabase = createClient();
+
+    // Fetch partner alias
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("room_participants")
+        .select("user_id, users(alias)")
+        .eq("room_id", roomId)
+        .neq("user_id", user.id)
+        .single();
+      const alias = (data?.users as any)?.alias;
+      if (alias) setPartnerName(alias);
+    });
 
     // Load existing messages first
     supabase.auth.getUser().then(async ({ data: { user } }) => {
