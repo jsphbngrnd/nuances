@@ -45,15 +45,18 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
       const id = p.id;
       const actualId = id && id !== "live" ? id : null;
       setRoomId(actualId);
-      // Compute topic once from roomId hash — deterministic so both users match
+      // Compute topic once from roomId — spread across full pool
       if (!search.get("topic")) {
         const seed = actualId ?? "default";
-        let hash = 0;
+        // Use two independent hash passes for better spread across small pools
+        let h1 = 0, h2 = 0;
         for (let i = 0; i < seed.length; i++) {
-          hash = ((hash << 5) - hash) + seed.charCodeAt(i);
-          hash |= 0;
+          const c = seed.charCodeAt(i);
+          h1 = Math.imul(h1 ^ c, 0x9e3779b9) | 0;
+          h2 = Math.imul(h2 ^ c, 0x517cc1b7) | 0;
         }
-        setTopic(topicPool[Math.abs(hash) % topicPool.length]);
+        const combined = Math.abs(h1 ^ (h2 << 13));
+        setTopic(topicPool[combined % topicPool.length]);
       }
     });
   }, []);
@@ -131,7 +134,16 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
     // Receive partner's message → their turn ends → our turn starts
     channel.on("broadcast", { event: "message" }, (payload: any) => {
       setMessages(prev => [...prev, { who: "them", text: payload.payload.text }]);
-      setTurn("you"); // partner spoke → now it's our turn
+      setTurn("you");
+    });
+
+    // Partner ended the conversation → we also navigate to summary
+    channel.on("broadcast", { event: "end" }, () => {
+      sessionStorage.setItem("nuance-room", JSON.stringify({
+        mode, topic, partnerAlias: partnerName,
+        messages: [],
+      }));
+      router.push(`/summary/live?mode=${mode}`);
     });
 
     channel.subscribe();
@@ -260,8 +272,10 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   }
 
   function endConversation() {
-    // Mark room as ended in Supabase (real rooms only)
     if (!isAi && roomId) {
+      // Notify partner so they also navigate to summary
+      channelRef.current?.send({ type: "broadcast", event: "end", payload: {} });
+      // Mark room as ended in Supabase
       const supabase = createClient();
       supabase.from("rooms").update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", roomId).then(() => {});
     }
