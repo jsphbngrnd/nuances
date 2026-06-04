@@ -279,7 +279,11 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   }
 
   function endConversation() {
-    // Cancel queue if still searching
+    // Mark room as ended in Supabase (real rooms only)
+    if (!isAi && roomId) {
+      const supabase = createClient();
+      supabase.from("rooms").update({ status: "ended", ended_at: new Date().toISOString() }).eq("id", roomId).then(() => {});
+    }
     fetch("/api/matchmaking", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "leave" }) });
     sessionStorage.setItem("nuance-room", JSON.stringify({
       mode, topic, partnerAlias: partnerName,
