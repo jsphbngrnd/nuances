@@ -9,10 +9,6 @@ import { StatusBar, Screen, MiniNav, LiveDot, ModeGlyph, ArrowIcon } from "@/com
 import { useCopy } from "@/lib/use-copy";
 import { createClient } from "@/lib/supabase/client";
 
-const RECONNECTS_PREVIEW = [
-  { name: "Mara", mode: "Late Night", status: "Mutual", topic: "What are you carrying that people don't see?" },
-  { name: "Ilan", mode: "Debate", status: "Pending", topic: "Does money make people freer?" },
-];
 
 export default function HomePage() {
   const t = useCopy();
@@ -20,15 +16,31 @@ export default function HomePage() {
   const [online, setOnline] = useState(142);
   const [selected, setSelected] = useState("deep");
   const [alias, setAlias] = useState("…");
+  const [reconnects, setReconnects] = useState<{ id: string; alias: string }[]>([]);
 
   useEffect(() => {
     const timer = setInterval(() => setOnline(o => Math.min(210, Math.max(120, o + (Math.floor(Math.random() * 5) - 2)))), 3000);
-    // Fetch real alias
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
-      const { data } = await supabase.from("users").select("alias").eq("id", user.id).single();
-      if (data?.alias) setAlias(data.alias);
+      // Fetch alias
+      const { data: u } = await supabase.from("users").select("alias").eq("id", user.id).single();
+      if (u?.alias) setAlias(u.alias);
+      // Fetch mutual reconnects (both voted yes) — only show if populated
+      const { data: recs } = await supabase
+        .from("reconnects")
+        .select("id, user_a_id, user_b_id")
+        .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
+        .eq("user_a_vote", true).eq("user_b_vote", true)
+        .limit(2);
+      if (recs?.length) {
+        const enriched = await Promise.all(recs.map(async r => {
+          const pid = r.user_a_id === user.id ? r.user_b_id : r.user_a_id;
+          const { data: p } = await supabase.from("users").select("alias").eq("id", pid).single();
+          return { id: r.id, alias: p?.alias ?? "Unknown" };
+        }));
+        setReconnects(enriched);
+      }
     });
     return () => clearInterval(timer);
   }, []);
@@ -101,27 +113,26 @@ export default function HomePage() {
           <p style={{ marginTop: 4, fontSize: 9, color: "var(--faint)", textTransform: "uppercase", letterSpacing: "0.18em", fontFamily: "var(--font-caps)" }}>From the NUANCE community</p>
         </div>
 
-        {/* Reconnects preview */}
-        <div style={{ borderRadius: 22, border: "1px solid var(--line-soft)", background: "var(--panel)", marginBottom: 8, overflow: "hidden" }}>
-          <div style={{ padding: "16px 18px 14px" }}>
-            <p className="np-eyebrow" style={{ fontSize: 9 }}>{t.home.reconnectsEyebrow}</p>
-          </div>
-          <div style={{ display: "grid", gap: 0 }}>
-            {RECONNECTS_PREVIEW.map((r, i) => (
-              <div key={r.name} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 18px", borderTop: "1px solid var(--line-soft)", background: i % 2 === 0 ? "transparent" : "transparent" }}>
-                <span style={{ width: 28, height: 28, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 13, flex: "0 0 auto" }}>{r.name.charAt(0)}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name} · {r.mode}</p>
-                  <p style={{ margin: "3px 0 0", fontSize: 11, color: "var(--muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.topic}</p>
+        {/* Reconnects preview — only shown when there are mutual reconnects */}
+        {reconnects.length > 0 && (
+          <div style={{ borderRadius: 22, border: "1px solid var(--line-soft)", background: "var(--panel)", marginBottom: 8, overflow: "hidden" }}>
+            <div style={{ padding: "16px 18px 14px" }}>
+              <p className="np-eyebrow" style={{ fontSize: 9 }}>{t.home.reconnectsEyebrow}</p>
+            </div>
+            <div style={{ display: "grid", gap: 0 }}>
+              {reconnects.map((r, i) => (
+                <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 18px", borderTop: "1px solid var(--line-soft)" }}>
+                  <span style={{ width: 28, height: 28, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 13, flex: "0 0 auto" }}>{r.alias.charAt(0)}</span>
+                  <p style={{ margin: 0, fontSize: 13, flex: 1 }}>{r.alias}</p>
+                  <span className="np-eyebrow" style={{ fontSize: 8, color: "var(--positive)" }}>Mutual</span>
                 </div>
-                <span className="np-eyebrow" style={{ fontSize: 8, color: r.status === "Mutual" ? "var(--positive)" : "var(--faint)", flex: "0 0 auto" }}>{r.status}</span>
-              </div>
-            ))}
+              ))}
+            </div>
+            <div style={{ padding: "12px 18px", borderTop: "1px solid var(--line-soft)" }}>
+              <button onClick={() => router.push("/reconnects")} style={{ background: "transparent", border: "none", color: "var(--faint)", fontFamily: "var(--font-caps)", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", cursor: "pointer", padding: 0 }}>{t.home.reconnectsLink}</button>
+            </div>
           </div>
-          <div style={{ padding: "12px 18px", borderTop: "1px solid var(--line-soft)" }}>
-            <button onClick={() => router.push("/reconnects")} style={{ background: "transparent", border: "none", color: "var(--faint)", fontFamily: "var(--font-caps)", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", cursor: "pointer", padding: 0 }}>{t.home.reconnectsLink}</button>
-          </div>
-        </div>
+        )}
       </Screen>
       <MiniNav />
     </div>
