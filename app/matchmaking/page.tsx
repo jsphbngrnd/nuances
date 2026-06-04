@@ -8,7 +8,6 @@ import { MODES, MODE_DETAIL } from "@/lib/nuance-data";
 import { StatusBar, Screen, ModeGlyph } from "@/components/ui";
 import { useCopy } from "@/lib/use-copy";
 
-const REAL_MATCH_TIMEOUT_MS = 20000; // 20s before falling back to AI
 
 function MatchmakingPageInner() {
   const t = useCopy();
@@ -37,7 +36,6 @@ function MatchmakingPageInner() {
       if (data.matched && !realMatchFound) {
         realMatchFound = true;
         clearInterval(pollReal);
-        clearTimeout(aiFallback);
         setRoomId(data.roomId);
         setMatchType("real");
         setMatched(true);
@@ -57,7 +55,6 @@ function MatchmakingPageInner() {
           if (data.matched && !realMatchFound) {
             realMatchFound = true;
             clearInterval(pollReal);
-            clearTimeout(aiFallback);
             setRoomId(data.roomId);
             setMatchType("real");
             setMatched(true);
@@ -66,16 +63,8 @@ function MatchmakingPageInner() {
       } catch { /* skip */ }
     }, 2000);
 
-    // After timeout fall back to AI
-    const aiFallback = setTimeout(() => {
-      if (!realMatchFound) {
-        clearInterval(pollReal);
-        setMatchType("ai");
-        setMatched(true);
-      }
-    }, REAL_MATCH_TIMEOUT_MS);
-
-    return () => { clearInterval(tick); clearInterval(pollReal); clearTimeout(aiFallback); };
+    // No AI fallback — keep searching until user cancels
+    return () => { clearInterval(tick); clearInterval(pollReal); };
   }, [mode]);
 
   useEffect(() => {
