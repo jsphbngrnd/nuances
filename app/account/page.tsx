@@ -9,15 +9,21 @@ import { ONB } from "@/lib/nuance-data";
 import { StatusBar, Screen, MiniNav, TopBar, Field, PillGroup, ToggleRow, inputStyle } from "@/components/ui";
 import { useCopy } from "@/lib/use-copy";
 
-const ALIAS = "OracleDuVendredi";
-
 export default function AccountPage() {
   const t = useCopy();
   const router = useRouter();
   const [theme, setTheme] = useState<"night" | "day">("night");
+  const [alias, setAlias] = useState("…");
 
   useEffect(() => {
     if (localStorage.getItem("nuance-theme") === "day") setTheme("day");
+    // Fetch real alias from Supabase
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data } = await supabase.from("users").select("alias, display_name").eq("id", user.id).single();
+      if (data?.alias) setAlias(data.alias);
+    });
   }, []);
   const [name, setName] = useState("");
   const [mood, setMood] = useState("Curious");
@@ -60,10 +66,10 @@ export default function AccountPage() {
           <div style={{ position: "absolute", top: -30, right: -30, width: 160, height: 160, background: "radial-gradient(circle, var(--glow), transparent 68%)" }} />
           <div style={{ position: "relative", display: "flex", gap: 14, alignItems: "center" }}>
             <span style={{ width: 44, height: 44, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel-2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 20, flex: "0 0 auto" }}>
-              {ALIAS.charAt(0)}
+              {alias.charAt(0)}
             </span>
             <div>
-              <p className="np-display" style={{ fontSize: 22 }}>{ALIAS}</p>
+              <p className="np-display" style={{ fontSize: 22 }}>{alias}</p>
               <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--muted)" }}>{t.onboarding.alias.evolves}</p>
             </div>
           </div>
@@ -97,7 +103,7 @@ export default function AccountPage() {
         <div style={{ padding: "16px 18px", borderRadius: 22, border: "1px solid var(--line-soft)", background: "var(--panel)", marginBottom: 14, display: "grid", gap: 18 }}>
           <p className="np-eyebrow" style={{ fontSize: 9 }}>{t.account.profileSection}</p>
           <Field label={t.account.namePlaceholder}>
-            <input type="text" placeholder={ALIAS} value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
+            <input type="text" placeholder={alias} value={name} onChange={e => setName(e.target.value)} style={inputStyle} />
           </Field>
           <Field label={t.account.moodLabel}>
             <PillGroup options={ONB.moods} value={mood} onChange={v => setMood(v as string)} />

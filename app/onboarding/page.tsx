@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ONB } from "@/lib/nuance-data";
+import { generateAlias } from "@/lib/alias";
 import { StatusBar, Screen, StepDots, Field, PillGroup, ToggleRow, ArrowIcon, inputStyle } from "@/components/ui";
 import { useCopy } from "@/lib/use-copy";
 
@@ -25,7 +26,7 @@ export default function OnboardingPage() {
   }, []);
   const [scrolledEnd, setScrolledEnd] = useState(false);
   const [accepted, setAccepted] = useState(false);
-  const [aliasIdx, setAliasIdx] = useState(0);
+  const [alias, setAlias] = useState(() => generateAlias({ stage: 1 }));
   const [rerolls, setRerolls] = useState(0);
   const [name, setName] = useState("");
   const [age, setAge] = useState("25–34");
@@ -48,10 +49,10 @@ export default function OnboardingPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          displayName: name || ONB.aliases[aliasIdx],
-          alias: ONB.aliases[aliasIdx],
-          aliasFamily: "oracle",
-          aliasStage: 1,
+          displayName: name || alias.alias,
+          alias: alias.alias,
+          aliasFamily: alias.familyId,
+          aliasStage: alias.stage,
           ageRange: age,
           language: lang,
           country,
@@ -166,10 +167,10 @@ export default function OnboardingPage() {
               <div style={{ position: "relative", marginTop: 24, padding: "28px 22px", borderRadius: 22, border: "1px solid var(--line-soft)", background: "linear-gradient(180deg, var(--panel-2), var(--panel))", overflow: "hidden" }}>
                 <div style={{ position: "absolute", top: -40, left: "50%", transform: "translateX(-50%)", width: 200, height: 160, background: "radial-gradient(circle, var(--glow), transparent 68%)" }} />
                 <p className="np-eyebrow" style={{ position: "relative", fontSize: 9 }}>{t.onboarding.alias.identity}</p>
-                <p className="np-display" style={{ position: "relative", fontSize: 30, marginTop: 10, fontStyle: "italic" }}>{ONB.aliases[aliasIdx]}</p>
+                <p className="np-display" style={{ position: "relative", fontSize: 30, marginTop: 10, fontStyle: "italic" }}>{alias.alias}</p>
                 <p style={{ position: "relative", margin: "8px 0 0", fontSize: 11, color: "var(--muted)" }}>{t.onboarding.alias.evolves}</p>
                 <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
-                  <button onClick={() => { if (rerolls < 2) { setRerolls(r => r + 1); setAliasIdx(i => (i + 1) % ONB.aliases.length); } }} disabled={rerolls >= 2} className="np-btn np-btn-ghost" style={{ fontSize: 11, padding: "8px 14px", opacity: rerolls >= 2 ? 0.45 : 1 }}>
+                  <button onClick={() => { if (rerolls < 2) { setRerolls(r => r + 1); setAlias(generateAlias({ excludeFamilyId: alias.familyId, stage: 1 })); } }} disabled={rerolls >= 2} className="np-btn np-btn-ghost" style={{ fontSize: 11, padding: "8px 14px", opacity: rerolls >= 2 ? 0.45 : 1 }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-15 6.7L3 16" /><path d="M3 21v-5h5" /></svg>
                     {t.onboarding.alias.reroll}
                   </button>
