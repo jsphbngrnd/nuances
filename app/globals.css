@@ -4,13 +4,14 @@
 
 /* ============================================================
    NUANCE — Design Token System
+   Based on NUANCE Style Guide (Claude Design handoff).
    Dark-first. <html class="dark"> = night (default).
-   Day theme: remove .dark, add data-theme="day" on body.
+   Day theme: remove .dark, set data-theme="day" on body.
    ============================================================ */
 
 @layer base {
+  /* ── Night (default) ── */
   :root {
-    /* ---------- NIGHT (default) — shadcn .dark vars ---------- */
     --background: #08080a;
     --foreground: #f7f7f4;
 
@@ -45,19 +46,11 @@
 
     --radius: 1.375rem; /* 22px */
 
-    /* Legacy aliases */
-    --bg: #08080a;
-    --panel: rgba(255, 255, 255, 0.05);
-    --panel-strong: rgba(255, 255, 255, 0.09);
-    --line: rgba(255, 255, 255, 0.12);
-    --text: #f7f7f4;
-    --text-muted: #8d8d87;
-
     color-scheme: dark;
   }
 
+  /* ── Dark class (shadcn compat) ── */
   .dark {
-    /* Same as :root — ensures shadcn components get the right values */
     --background: #08080a;
     --foreground: #f7f7f4;
     --card: rgba(255, 255, 255, 0.05);
@@ -85,17 +78,47 @@
     --text-faint: rgba(247, 247, 244, 0.46);
     color-scheme: dark;
   }
+
+  /* ── Day theme ── */
+  body[data-theme="day"] {
+    --background: #f8f4ea;
+    --foreground: #141414;
+    --card: rgba(255, 255, 255, 0.82);
+    --card-foreground: #141414;
+    --popover: #fffdf9;
+    --popover-foreground: #141414;
+    --primary: #141414;
+    --primary-foreground: #f7f5ef;
+    --secondary: rgba(255, 255, 255, 0.74);
+    --secondary-foreground: #141414;
+    --muted: rgba(0, 0, 0, 0.04);
+    --muted-foreground: #6e6a61;
+    --accent: rgba(0, 0, 0, 0.05);
+    --accent-foreground: #141414;
+    --destructive: #a33b34;
+    --destructive-foreground: #ffffff;
+    --positive: #2f9e74;
+    --border: rgba(0, 0, 0, 0.12);
+    --input: rgba(0, 0, 0, 0.12);
+    --ring: #141414;
+    --surface: rgba(255, 255, 255, 0.74);
+    --surface-strong: rgba(255, 255, 255, 0.92);
+    --border-soft: rgba(0, 0, 0, 0.08);
+    --glow: rgba(0, 0, 0, 0.05);
+    --text-faint: rgba(20, 20, 20, 0.5);
+    color-scheme: light;
+  }
 }
 
-/* ============ Font stacks ============ */
+/* ── Font stacks ── */
 :root {
   --font-display-local: var(--font-display), Didot, Baskerville, "Times New Roman", serif;
   --font-sans-local: var(--font-sans), "Beausite", "Avenir Next", "Segoe UI", sans-serif;
-  --font-caps-local: var(--font-caps), "Beausite Medium", "Beausite", "Avenir Next", "Segoe UI", sans-serif;
+  --font-caps-local: var(--font-caps), "Beausite Medium", "Beausite", "Avenir Next", sans-serif;
 }
 
+/* ── Base ── */
 * { box-sizing: border-box; }
-
 html { scroll-behavior: smooth; }
 
 body {
@@ -109,17 +132,26 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans-local);
   letter-spacing: -0.01em;
-  font-weight: 400;
   -webkit-font-smoothing: antialiased;
 }
 
+body[data-theme="day"] {
+  background:
+    radial-gradient(circle at top left, rgba(0, 0, 0, 0.035), transparent 24%),
+    radial-gradient(circle at top right, rgba(0, 0, 0, 0.03), transparent 28%),
+    radial-gradient(circle at bottom, rgba(0, 0, 0, 0.025), transparent 22%),
+    linear-gradient(180deg, #f9f6ef 0%, #f6f1e8 55%, #f2ece3 100%);
+}
+
 a { color: inherit; text-decoration: none; }
-
 button, input, select, textarea { font: inherit; }
-
 ::selection { background: rgba(255, 255, 255, 0.18); }
+body[data-theme="day"] ::selection { background: rgba(0, 0, 0, 0.12); }
 
-/* ============ App layout ============ */
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+
 .app-frame {
   @apply mx-auto min-h-screen max-w-[460px] px-3 pb-6 pt-3;
 }
@@ -133,7 +165,7 @@ button, input, select, textarea { font: inherit; }
   overflow: hidden;
 }
 
-/* ============ Device shell ============ */
+/* ── Device shell ── */
 .device-shell {
   position: relative;
   display: flex;
@@ -144,13 +176,23 @@ button, input, select, textarea { font: inherit; }
   min-height: 0;
   overflow: hidden;
   border-radius: 46px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-soft);
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 28%),
+    radial-gradient(circle at top, var(--glow), transparent 28%),
     linear-gradient(180deg, rgba(16, 16, 16, 0.985), rgba(6, 6, 6, 0.995));
   box-shadow:
     0 36px 120px rgba(0, 0, 0, 0.52),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+body[data-theme="day"] .device-shell {
+  border-color: rgba(0, 0, 0, 0.1);
+  background:
+    radial-gradient(circle at top, rgba(0, 0, 0, 0.035), transparent 28%),
+    linear-gradient(180deg, rgba(252, 249, 243, 0.985), rgba(245, 239, 230, 0.995));
+  box-shadow:
+    0 28px 100px rgba(56, 47, 33, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
 }
 
 .device-notch {
@@ -158,7 +200,7 @@ button, input, select, textarea { font: inherit; }
   height: 5px;
   width: 72px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--border-soft);
 }
 
 .device-status {
@@ -169,8 +211,7 @@ button, input, select, textarea { font: inherit; }
   padding: 0.95rem 1rem 0.4rem;
 }
 
-.device-status-time,
-.device-status-meta {
+.device-status-time {
   font-family: var(--font-caps-local);
   font-size: 0.68rem;
   font-weight: 600;
@@ -192,6 +233,7 @@ button, input, select, textarea { font: inherit; }
   color: var(--foreground);
 }
 
+/* ── App shell ── */
 .app-shell-header {
   flex: 0 0 auto;
   padding: 0;
@@ -213,103 +255,35 @@ button, input, select, textarea { font: inherit; }
   background: linear-gradient(180deg, rgba(9, 9, 13, 0), rgba(9, 9, 13, 0.88) 40%);
 }
 
-/* ============ Screen layout ============ */
+body[data-theme="day"] .app-shell-nav {
+  background: linear-gradient(180deg, rgba(246, 241, 232, 0), rgba(246, 241, 232, 0.92) 40%);
+}
+
+/* ── Screen layout ── */
 .screen-stack { display: grid; gap: 1rem; }
+.screen-header { padding: 0; border: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
+.screen-card { @apply glass-panel p-5; }
 
-.screen-card {
-  @apply glass-panel p-6;
-}
+/* ============================================================
+   COMPONENT TOKENS  (Style Guide canonical set)
+   ============================================================ */
 
-.screen-header {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-
-.app-topbar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.app-kicker {
-  font-family: var(--font-caps-local);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-
-.app-metric {
-  min-width: 88px;
-  border-radius: 24px;
-  border: 1px solid var(--border-soft);
-  background: var(--surface);
-  padding: 0.95rem 0.95rem 0.8rem;
-  text-align: right;
-}
-
-.app-metric-value {
-  font-family: var(--font-display-local);
-  font-size: 2rem;
-  line-height: 0.95;
-  color: var(--foreground);
-}
-
-.app-section-title {
-  font-family: var(--font-display-local);
-  font-size: 2rem;
-  line-height: 0.94;
-  letter-spacing: -0.04em;
-  color: var(--foreground);
-}
-
-/* ============ Component tokens ============ */
+/* Glass panel — base surface */
 .glass-panel {
-  @apply rounded-xl backdrop-blur-xl;
   border-radius: 26px;
   border: 1px solid var(--border-soft);
   background: var(--surface);
+  backdrop-filter: blur(18px);
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
 }
 
-.launch-panel {
-  border: 1px solid var(--border);
-  background: linear-gradient(135deg, #1a1a1a 0%, #101010 56%, #050505 100%);
+body[data-theme="day"] .glass-panel {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 18px 60px rgba(45, 37, 25, 0.08);
 }
 
-.launch-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 34%);
-  pointer-events: none;
-}
-
-.liquid-panel {
-  position: relative;
-  border: 1px solid var(--border-soft);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.022));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(26px);
-}
-
-/* ============ Typography ============ */
-.screen-heading {
-  font-family: var(--font-display-local);
-  font-size: 33px;
-  line-height: 0.94;
-  letter-spacing: -0.04em;
-  font-weight: 300;
-  color: var(--foreground);
-  text-shadow: 0 0 18px rgba(255, 255, 255, 0.04);
-  font-feature-settings: "liga" 1, "kern" 1;
-}
-
+/* Eyebrow — caps label */
 .eyebrow {
   font-family: var(--font-caps-local);
   font-size: 10.5px;
@@ -319,152 +293,51 @@ button, input, select, textarea { font: inherit; }
   color: var(--text-faint);
 }
 
+/* Display heading */
+.screen-heading {
+  font-family: var(--font-display-local);
+  font-size: 33px;
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+  font-weight: 300;
+  color: var(--foreground);
+}
+
+body[data-theme="day"] .screen-heading { text-shadow: none; }
+
+/* Section title — slightly smaller display */
+.app-section-title {
+  font-family: var(--font-display-local);
+  font-size: 2rem;
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+  font-weight: 300;
+  color: var(--foreground);
+}
+
+/* Divider */
 .hairline {
   height: 1px;
   width: 100%;
   background: var(--border);
 }
 
+/* Text link */
 .soft-link {
   @apply text-sm underline underline-offset-4 transition;
   color: var(--foreground);
   text-decoration-color: var(--border);
 }
+.soft-link:hover { opacity: 0.7; }
 
-.soft-link:hover {
-  text-decoration-color: var(--border-soft);
-  opacity: 0.8;
-}
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
 
-/* ============ Theme toggle button ============ */
-.theme-toggle-button {
-  position: fixed;
-  right: max(0.9rem, env(safe-area-inset-right, 0px) + 0.6rem);
-  bottom: max(0.9rem, env(safe-area-inset-bottom, 0px) + 0.6rem);
-  z-index: 60;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: rgba(8, 8, 10, 0.88);
-  color: var(--foreground);
-  padding: 0.7rem 0.95rem;
-  backdrop-filter: blur(20px);
-  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease;
-}
-
-.theme-toggle-button:hover { transform: translateY(-1px); }
-
-.theme-toggle-icon { font-size: 0.85rem; line-height: 1; }
-
-.theme-toggle-label {
-  font-family: var(--font-caps-local);
-  font-size: 0.5rem;
-  font-weight: 600;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-}
-
-/* ============ Mode carousel ============ */
-.mode-carousel-shell { position: relative; display: grid; gap: 1rem; }
-
-.mode-carousel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.mode-carousel-controls { display: flex; align-items: center; gap: 0.55rem; }
-
-.mode-carousel-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.35rem;
-  height: 2.35rem;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--foreground);
-  backdrop-filter: blur(18px);
-  transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, opacity 180ms ease;
-}
-
-.mode-carousel-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  background: var(--surface-strong);
-}
-
-.mode-carousel-button:disabled { opacity: 0.35; cursor: default; }
-
-.mode-carousel-rail { position: relative; overflow: hidden; }
-.mode-carousel-rail::before, .mode-carousel-rail::after { display: none; }
-
-.mode-carousel-track {
-  display: flex;
-  gap: 0;
-  overflow-x: auto;
-  padding: 0 0 0.4rem;
-  scroll-snap-type: x proximity;
-  scroll-padding-left: 0;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  touch-action: pan-y;
-  cursor: grab;
-}
-
-.mode-carousel-track::-webkit-scrollbar { display: none; }
-.mode-carousel-track-dragging { cursor: grabbing; scroll-snap-type: none; }
-
-.mode-carousel-card {
-  flex: 0 0 100%;
-  max-width: 100%;
-  padding-right: 0.7rem;
-  box-sizing: border-box;
-  scroll-snap-align: start;
-  transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease, filter 220ms ease;
-  opacity: 1;
-  filter: none;
-}
-
-.mode-carousel-card:last-child { padding-right: 0; }
-
-.mode-carousel-card-active {
-  opacity: 1;
-  filter: none;
-  transform: translate3d(var(--mode-card-drag-x, 0px), 0, 0) rotate(var(--mode-card-drag-rotate, 0deg));
-}
-
-.mode-carousel-card:not(.mode-carousel-card-active) { transform: none; }
-.mode-carousel-track-dragging .mode-carousel-card-active { transition: none; }
-.mode-carousel-card .glass-panel { box-shadow: none; }
-
-.mode-carousel-dots {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-}
-
-.mode-carousel-dot {
-  width: 0.4rem;
-  height: 0.4rem;
-  border-radius: 999px;
-  border: 0;
-  background: var(--border);
-  transition: width 180ms ease, background-color 180ms ease, opacity 180ms ease;
-  opacity: 0.85;
-}
-
-.mode-carousel-dot-active { width: 1.5rem; background: var(--foreground); opacity: 0.82; }
-
-/* ============ Mini nav ============ */
 .mini-nav-shell {
   border-radius: 30px;
   border: 1px solid var(--border);
-  background: rgba(10, 10, 14, 0.82);
+  background: rgba(10, 10, 14, 0.86);
   padding: 0.5rem;
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.46);
   backdrop-filter: blur(24px);
@@ -475,27 +348,20 @@ button, input, select, textarea { font: inherit; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
+  gap: 0.3rem;
   border-radius: 22px;
-  padding: 0.75rem;
-  text-align: center;
-  color: var(--foreground);
-  transition: background-color 180ms ease, color 180ms ease, opacity 180ms ease;
+  padding: 0.7rem 0.4rem;
+  color: rgba(255, 255, 255, 0.72);
+  transition: background-color 180ms ease, color 180ms ease;
 }
 
-.mini-nav-item:hover { background: var(--surface-strong); }
-
+.mini-nav-item:hover { background: var(--surface-strong); color: rgba(255, 255, 255, 1); }
 .mini-nav-item-active { background: #f1f1eb; color: #0a0a0a; }
 
-/* ============ Editorial grid ============ */
-.editorial-grid {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 32px 32px;
-}
+/* ============================================================
+   MOBILE RESPONSIVE
+   ============================================================ */
 
-/* ============ Mobile overrides ============ */
 @media (max-width: 767px) {
   .app-frame { max-width: none; padding: 0; }
 
@@ -519,7 +385,7 @@ button, input, select, textarea { font: inherit; }
     box-shadow: none;
   }
 
-  .app-shell-body { overflow: visible; padding-bottom: 7.25rem; }
+  .app-shell-body { overflow: visible; padding-bottom: 7.5rem; }
 
   .app-shell-nav {
     position: fixed;
@@ -532,128 +398,8 @@ button, input, select, textarea { font: inherit; }
   }
 
   .app-shell-nav > nav { max-width: 430px; margin: 0 auto; }
-
-  .theme-toggle-button {
-    bottom: calc(5.9rem + env(safe-area-inset-bottom, 0px));
-  }
 }
 
 @media (min-width: 768px) {
-  .app-shell-body { padding-left: 1.05rem; padding-right: 1.05rem; }
-  .mode-carousel-card { flex-basis: 100%; max-width: 100%; }
+  .app-shell-body { padding-left: 1.1rem; padding-right: 1.1rem; }
 }
-
-/* ============ Day (light) theme ============ */
-body[data-theme="day"] {
-  color-scheme: light;
-  background:
-    radial-gradient(circle at top left, rgba(0, 0, 0, 0.035), transparent 24%),
-    radial-gradient(circle at top right, rgba(0, 0, 0, 0.03), transparent 28%),
-    radial-gradient(circle at bottom, rgba(0, 0, 0, 0.025), transparent 22%),
-    linear-gradient(180deg, #f9f6ef 0%, #f6f1e8 55%, #f2ece3 100%);
-  color: #141414;
-
-  --background: #f8f4ea;
-  --foreground: #141414;
-  --card: rgba(255, 255, 255, 0.82);
-  --card-foreground: #141414;
-  --primary: #141414;
-  --primary-foreground: #f7f5ef;
-  --secondary: rgba(255, 255, 255, 0.74);
-  --secondary-foreground: #141414;
-  --muted: rgba(0, 0, 0, 0.04);
-  --muted-foreground: #6e6a61;
-  --accent: rgba(0, 0, 0, 0.05);
-  --accent-foreground: #141414;
-  --destructive: #a33b34;
-  --positive: #2f9e74;
-  --border: rgba(0, 0, 0, 0.12);
-  --input: rgba(0, 0, 0, 0.12);
-  --ring: #141414;
-  --surface: rgba(255, 255, 255, 0.74);
-  --surface-strong: rgba(255, 255, 255, 0.92);
-  --border-soft: rgba(0, 0, 0, 0.08);
-  --glow: rgba(0, 0, 0, 0.05);
-  --text-faint: rgba(20, 20, 20, 0.5);
-
-  /* Legacy aliases */
-  --bg: #f8f4ea;
-  --panel: rgba(255, 255, 255, 0.82);
-  --line: rgba(0, 0, 0, 0.12);
-  --text: #141414;
-  --text-muted: #6e6a61;
-}
-
-body[data-theme="day"] ::selection { background: rgba(0, 0, 0, 0.12); }
-
-body[data-theme="day"] .editorial-grid {
-  background-image:
-    linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
-  background-size: 32px 32px;
-}
-
-body[data-theme="day"] .device-shell {
-  border-color: rgba(0, 0, 0, 0.1);
-  background:
-    radial-gradient(circle at top, rgba(0, 0, 0, 0.035), transparent 28%),
-    linear-gradient(180deg, rgba(252, 249, 243, 0.985), rgba(245, 239, 230, 0.995));
-  box-shadow:
-    0 28px 100px rgba(56, 47, 33, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.42);
-}
-
-body[data-theme="day"] .device-notch,
-body[data-theme="day"] .hairline { background: rgba(0, 0, 0, 0.1); }
-
-body[data-theme="day"] .screen-heading,
-body[data-theme="day"] .app-section-title,
-body[data-theme="day"] .app-metric-value { color: #111111; text-shadow: none; }
-
-body[data-theme="day"] .glass-panel {
-  border-color: rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.74);
-  box-shadow: 0 18px 60px rgba(45, 37, 25, 0.08);
-}
-
-body[data-theme="day"] .launch-panel {
-  border-color: rgba(0, 0, 0, 0.08);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(246, 240, 231, 0.74));
-}
-
-body[data-theme="day"] .liquid-panel {
-  border-color: rgba(0, 0, 0, 0.08);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(246, 240, 231, 0.68));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.52);
-}
-
-body[data-theme="day"] .app-shell-nav {
-  background: linear-gradient(180deg, rgba(246, 241, 232, 0), rgba(246, 241, 232, 0.92) 40%);
-}
-
-body[data-theme="day"] .theme-toggle-button {
-  border-color: rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.88);
-  color: rgba(0, 0, 0, 0.9);
-}
-
-body[data-theme="day"] .mode-carousel-button {
-  border-color: rgba(0, 0, 0, 0.08);
-  background: rgba(255, 255, 255, 0.72);
-  color: rgba(0, 0, 0, 0.82);
-}
-
-body[data-theme="day"] .mode-carousel-button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.92);
-}
-
-body[data-theme="day"] .mini-nav-shell {
-  border-color: rgba(0, 0, 0, 0.08);
-  background: rgba(15, 15, 17, 0.88);
-}
-
-body[data-theme="day"] .mini-nav-item { color: rgba(255, 255, 255, 0.92); }
-body[data-theme="day"] .mini-nav-item:hover { color: rgba(255, 255, 255, 1); }
-body[data-theme="day"] .mini-nav-item-active { color: rgba(0, 0, 0, 1); }
-
-body[data-theme="day"] .soft-link { color: rgba(0, 0, 0, 0.74); }
