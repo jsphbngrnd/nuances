@@ -37,8 +37,15 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const search = useSearchParams();
   const mode = (search.get("mode") || "deep") as keyof typeof MODE_DETAIL;
-  const matchType = (search.get("matchType") || "real") as RoomMode; // default real, not ai
-  const roomId = search.get("roomId"); // set when matchType === "real"
+  const matchType = (search.get("matchType") || "real") as RoomMode;
+  // roomId comes from the URL PATH ([id]), not query params — read via params prop
+  const [roomId, setRoomId] = useState<string | null>(null);
+  useEffect(() => {
+    params.then(p => {
+      const id = p.id;
+      setRoomId(id && id !== "live" ? id : null);
+    });
+  }, []);
   const m = MODES.find(x => x.id === mode)!;
 
   const topicPool = TOPICS[mode];
