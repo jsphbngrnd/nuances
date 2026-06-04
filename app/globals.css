@@ -7,21 +7,7 @@
    Night default. Day via [data-theme="day"] on <html>.
    ============================================================ */
 
-@font-face {
-  font-family: "Concrette";
-  src: url("/fonts/ConcretteS-TRIAL-Light.woff2") format("woff2");
-  font-weight: 300; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: "Beausite";
-  src: url("/fonts/Beausite-Classic-Clear.ttf") format("truetype");
-  font-weight: 400; font-style: normal; font-display: swap;
-}
-@font-face {
-  font-family: "Beausite Medium";
-  src: url("/fonts/Beausite-Classic-Medium.ttf") format("truetype");
-  font-weight: 500; font-style: normal; font-display: swap;
-}
+/* Fonts loaded via next/font/local in app/layout.tsx — no @font-face needed here */
 
 :root {
   --font-display: "Concrette", Didot, Baskerville, "Times New Roman", serif;

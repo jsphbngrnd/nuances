@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ONB } from "@/lib/nuance-data";
@@ -12,9 +12,11 @@ const ALIAS = "OracleDuVendredi";
 
 export default function AccountPage() {
   const router = useRouter();
-  const [theme, setTheme] = useState<"night" | "day">(
-    typeof window !== "undefined" && localStorage.getItem("nuance-theme") === "day" ? "day" : "night"
-  );
+  const [theme, setTheme] = useState<"night" | "day">("night");
+
+  useEffect(() => {
+    if (localStorage.getItem("nuance-theme") === "day") setTheme("day");
+  }, []);
   const [lang, setLang] = useState("en");
   const [name, setName] = useState("");
   const [mood, setMood] = useState("Curious");

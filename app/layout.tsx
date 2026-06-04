@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${display.variable} ${sans.variable} ${caps.variable}`}>
-      <body>
+      <body suppressHydrationWarning>
         <DeviceShell>{children}</DeviceShell>
       </body>
     </html>

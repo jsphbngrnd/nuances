@@ -92,14 +92,13 @@ export default function HomePage() {
         </div>
 
         {/* Reconnects preview */}
-        <div style={{ padding: "18px 18px 20px", borderRadius: 22, border: "1px solid var(--line-soft)", background: "var(--panel)", marginBottom: 8 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <div style={{ borderRadius: 22, border: "1px solid var(--line-soft)", background: "var(--panel)", marginBottom: 8, overflow: "hidden" }}>
+          <div style={{ padding: "16px 18px 14px" }}>
             <p className="np-eyebrow" style={{ fontSize: 9 }}>Reconnects</p>
-            <button onClick={() => router.push("/reconnects")} style={{ background: "transparent", border: "none", color: "var(--faint)", fontFamily: "var(--font-caps)", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", cursor: "pointer" }}>Open →</button>
           </div>
-          <div style={{ display: "grid", gap: 10 }}>
-            {RECONNECTS_PREVIEW.map(r => (
-              <div key={r.name} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: 14, border: "1px solid var(--line-soft)", background: "var(--panel-2)" }}>
+          <div style={{ display: "grid", gap: 0 }}>
+            {RECONNECTS_PREVIEW.map((r, i) => (
+              <div key={r.name} style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 18px", borderTop: "1px solid var(--line-soft)", background: i % 2 === 0 ? "transparent" : "transparent" }}>
                 <span style={{ width: 28, height: 28, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 13, flex: "0 0 auto" }}>{r.name.charAt(0)}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ margin: 0, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name} · {r.mode}</p>
@@ -108,6 +107,9 @@ export default function HomePage() {
                 <span className="np-eyebrow" style={{ fontSize: 8, color: r.status === "Mutual" ? "var(--positive)" : "var(--faint)", flex: "0 0 auto" }}>{r.status}</span>
               </div>
             ))}
+          </div>
+          <div style={{ padding: "12px 18px", borderTop: "1px solid var(--line-soft)" }}>
+            <button onClick={() => router.push("/reconnects")} style={{ background: "transparent", border: "none", color: "var(--faint)", fontFamily: "var(--font-caps)", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase", cursor: "pointer", padding: 0 }}>See all reconnects →</button>
           </div>
         </div>
       </Screen>
