@@ -170,7 +170,7 @@ export default function OnboardingPage() {
                 <p className="np-display" style={{ position: "relative", fontSize: 30, marginTop: 10, fontStyle: "italic" }}>{alias.alias}</p>
                 <p style={{ position: "relative", margin: "8px 0 0", fontSize: 11, color: "var(--muted)" }}>{t.onboarding.alias.evolves}</p>
                 <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
-                  <button onClick={() => { if (rerolls < 2) { setRerolls(r => r + 1); setAlias(generateAlias({ excludeFamilyId: alias.familyId, stage: 1 })); } }} disabled={rerolls >= 2} className="np-btn np-btn-ghost" style={{ fontSize: 11, padding: "8px 14px", opacity: rerolls >= 2 ? 0.45 : 1 }}>
+                  <button onClick={() => { if (rerolls < 2) { setRerolls(r => r + 1); setAlias(generateAlias({ excludeAlias: alias.alias, stage: 1 })); } }} disabled={rerolls >= 2} className="np-btn np-btn-ghost" style={{ fontSize: 11, padding: "8px 14px", opacity: rerolls >= 2 ? 0.45 : 1 }}>
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-15 6.7L3 16" /><path d="M3 21v-5h5" /></svg>
                     {t.onboarding.alias.reroll}
                   </button>
