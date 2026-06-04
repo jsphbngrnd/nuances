@@ -49,14 +49,21 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   const m = MODES.find(x => x.id === mode)!;
 
   const topicPool = TOPICS[mode];
-  // Real rooms: topic passed from topic page (same for both users)
-  // AI rooms: random
-  const topicRef = useRef(
-    search.get("topic")
-      ? decodeURIComponent(search.get("topic")!)
-      : topicPool[Math.floor(Math.random() * topicPool.length)]
-  );
-  const topic = topicRef.current;
+  // Topic from URL param (AI rooms) OR deterministic from roomId (real rooms)
+  // roomId hash ensures both users always see the same topic
+  const topicRef = useRef(() => {
+    const fromUrl = search.get("topic");
+    if (fromUrl) return decodeURIComponent(fromUrl);
+    // Deterministic from roomId so both users in same room get same topic
+    const seed = roomId ?? String(Date.now());
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+      hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+      hash |= 0;
+    }
+    return topicPool[Math.abs(hash) % topicPool.length];
+  });
+  const topic = topicRef.current();
 
   const personaRef = useRef(selectPersona(mode, search.get("personaId")));
   const persona = personaRef.current;
@@ -299,7 +306,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
         {/* Blitz clocks */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
           {[{ key: "them" as Turn, label: partnerName, val: themLeft }, { key: "you" as Turn, label: t.room.youLabel, val: youLeft }].map(c => {
-            const active = isAi ? turn === c.key : c.key === "you";
+            const active = turn === c.key; // active player highlighted for both real and AI rooms
             const low = c.val <= 30;
             return (
               <div key={c.key} style={{ padding: "8px 11px", borderRadius: 12, border: `1px solid ${active ? "var(--accent)" : "var(--line-soft)"}`, background: active ? "var(--panel-2)" : "var(--panel)", opacity: active ? 1 : 0.55, transition: "all 300ms ease" }}>
