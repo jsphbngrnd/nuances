@@ -29,11 +29,11 @@ export default function NotificationsPage() {
       const [{ data: d1 }, { data: d2 }] = await Promise.all([
         // They're user_a, voted yes — we're user_b, haven't voted
         supabase.from("reconnects")
-          .select("id, room_id, user_a_id, user_b_id, user_a_vote, user_b_vote, rooms(mode)")
+          .select("id, room_id, user_a_id, user_b_id, user_a_vote, user_b_vote")
           .eq("user_b_id", user.id).eq("user_a_vote", true).is("user_b_vote", null),
         // We're user_a, they're user_b, voted yes — we haven't voted
         supabase.from("reconnects")
-          .select("id, room_id, user_a_id, user_b_id, user_a_vote, user_b_vote, rooms(mode)")
+          .select("id, room_id, user_a_id, user_b_id, user_a_vote, user_b_vote")
           .eq("user_a_id", user.id).eq("user_b_vote", true).is("user_a_vote", null),
       ]);
       const data = [...(d1 ?? []), ...(d2 ?? [])];
@@ -48,7 +48,7 @@ export default function NotificationsPage() {
             id: r.id,
             room_id: r.room_id,
             from_alias: sender?.alias ?? "Someone",
-            topic: (r.rooms as any)?.mode ?? "a conversation",
+            topic: "a conversation",
             when: "Recently",
           };
         }));
