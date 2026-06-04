@@ -76,10 +76,11 @@ export async function POST(request: Request) {
   }
 
   if (body.action === "enter" && body.mode) {
-    await admin.from("matchmaking_queue").upsert(
-      { user_id: user.id, mode: body.mode, language: "en", country: "unknown", status: "waiting" },
-      { onConflict: "user_id" }
-    );
+    // Cancel any existing entry then insert fresh
+    await admin.from("matchmaking_queue")
+      .update({ status: "cancelled" }).eq("user_id", user.id);
+    await admin.from("matchmaking_queue")
+      .insert({ user_id: user.id, mode: body.mode, language: "en", country: "unknown", status: "waiting" });
     return tryMatch(admin, user.id, body.mode);
   }
 
