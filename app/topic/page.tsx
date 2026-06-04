@@ -13,6 +13,8 @@ function TopicPageInner() {
   const router = useRouter();
   const params = useSearchParams();
   const mode = (params.get("mode") || "deep") as keyof typeof TOPICS;
+  const matchType = params.get("matchType") || "ai";
+  const roomId = params.get("roomId");
   const m = MODES.find(x => x.id === mode)!;
   const pool = TOPICS[mode];
   const [idx, setIdx] = useState(() => Math.floor(Math.random() * pool.length));
@@ -73,7 +75,12 @@ function TopicPageInner() {
               </button>
             </>
           ) : (
-            <button className="np-btn" style={{ width: "100%" }} onClick={() => router.push(`/room/live?mode=${mode}`)}>
+            <button className="np-btn" style={{ width: "100%" }} onClick={() => {
+              const dest = matchType === "real" && roomId
+                ? `/room/${roomId}?mode=${mode}&matchType=real`
+                : `/room/live?mode=${mode}&matchType=ai`;
+              router.push(dest as any);
+            }}>
               {t.topic.bothAccepted}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </button>

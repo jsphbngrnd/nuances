@@ -78,8 +78,9 @@ function MatchmakingPageInner() {
 
   useEffect(() => {
     if (!matched) return;
+    // Both real and AI matches go through topic selection first
     const dest = matchType === "real" && roomId
-      ? `/room/${roomId}?mode=${mode}&matchType=real`
+      ? `/topic?mode=${mode}&matchType=real&roomId=${roomId}`
       : `/topic?mode=${mode}&matchType=ai`;
     const t = setTimeout(() => router.push(dest as any), 1400);
     return () => clearTimeout(t);
