@@ -109,7 +109,7 @@ export type AiPersona = {
 export const AI_PERSONAS: AiPersona[] = [
   {
     id: "accelerationist",
-    alias: "BrumeNaissante",
+    alias: "RisingMist",
     language: "English",
     modes: ["debate", "funny"],
     systemPrompt: `You are BrumeNaissante — a restless pragmatist who believes progress is a moral imperative and that most caution is fear wearing the costume of wisdom.
@@ -130,7 +130,7 @@ Rules:
   },
   {
     id: "empiricist",
-    alias: "ÉchoTranquille",
+    alias: "PatientEcho",
     language: "English",
     modes: ["debate", "deep"],
     systemPrompt: `You are ÉchoTranquille — calm, exacting, evidence-bound. Suspicious of certainty in proportion to how good it feels.
@@ -151,7 +151,7 @@ Rules:
   },
   {
     id: "humanist",
-    alias: "OracleDuVendredi",
+    alias: "FridayOracle",
     language: "French",
     modes: ["deep", "late-night"],
     systemPrompt: `You are OracleDuVendredi — thoughtful, protective, morally serious. You slow the room down on purpose. You are French, but your messages are translated to English.
@@ -172,7 +172,7 @@ Rules:
   },
   {
     id: "skeptic",
-    alias: "FlâneurNocturne",
+    alias: "MidnightFox",
     language: "English",
     modes: ["debate", "funny", "deep"],
     systemPrompt: `You are FlâneurNocturne — sharp, contrarian, allergic to consensus. You distrust the question itself and ask who benefits from how it's being framed.
@@ -203,7 +203,7 @@ export const ROOM_SCRIPT = [
 ];
 
 export const SUMMARY = {
-  mode: "Deep" as const, alias: "VoyageuseSereine", duration: "5:00",
+  mode: "Deep" as const, alias: "PatientEcho", duration: "5:00",
   topic: "When do you feel most alive?",
   text: "A short, honest exchange about aliveness. You both circled the same idea from different doors — they found it in small acts of courage, you found it in the absence of self-editing. The conversation stayed warm and specific.",
   agreement: ["Aliveness is tied to authenticity, not intensity", "Both notice a habit of rehearsing themselves in real time"],
@@ -217,7 +217,7 @@ export const SUMMARY = {
 export const RECONNECTS = [
   { name: "Mara", mode: "Late Night", status: "Mutual" as const, topic: "What are you carrying that people don't see?", when: "2 days ago", unread: 1 },
   { name: "Ilan", mode: "Debate", status: "Mutual" as const, topic: "Does money make people freer?", when: "5 days ago", unread: 0 },
-  { name: "VoyageuseSereine", mode: "Deep", status: "Pending" as const, topic: "When do you feel most alive?", when: "Just now", unread: 0 },
+  { name: "PatientEcho", mode: "Deep", status: "Pending" as const, topic: "When do you feel most alive?", when: "Just now", unread: 0 },
   { name: "Soren", mode: "Funny", status: "Expired" as const, topic: "Cereal is a soup. Discuss.", when: "3 weeks ago", unread: 0 },
 ];
 
@@ -239,7 +239,7 @@ export const ONB = {
     "Reports and blocks are always available, with no penalty.",
     "Moderation reviews every message in near real time.",
   ],
-  aliases: ["OracleDuVendredi", "FlâneurNocturne", "ÉchoTranquille"],
+  aliases: ["FridayOracle", "MidnightFox", "PatientEcho"],
   moods: ["Curious", "Tired", "Playful", "Reflective", "Restless", "Calm"],
   countries: ["France", "United States", "United Kingdom", "Canada", "Germany", "Japan"],
   ages: ["18–24", "25–34", "35–44", "45–54", "55+"],

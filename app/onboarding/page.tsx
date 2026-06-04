@@ -2,7 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ONB } from "@/lib/nuance-data";
 import { StatusBar, Screen, StepDots, Field, PillGroup, ToggleRow, ArrowIcon, inputStyle } from "@/components/ui";
@@ -12,11 +12,15 @@ const TOTAL = 5;
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [lang, setLang] = useState(() => {
-    if (typeof window === "undefined") return "en";
-    const browserLang = navigator.language || (navigator as any).userLanguage || "";
-    return browserLang.toLowerCase().startsWith("fr") ? "fr" : "en";
-  });
+  const [lang, setLang] = useState("en");
+
+  // Detect locale from IP on mount (most reliable for location)
+  useEffect(() => {
+    fetch("/api/detect-locale")
+      .then(r => r.json())
+      .then(d => { if (d.locale === "fr") setLang("fr"); })
+      .catch(() => {});
+  }, []);
   const [scrolledEnd, setScrolledEnd] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [aliasIdx, setAliasIdx] = useState(0);

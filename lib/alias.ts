@@ -4,18 +4,18 @@ export type AliasFamily = {
 };
 
 export const ALIAS_FAMILIES: AliasFamily[] = [
-  { id: "brume", stages: ["BrumeNaissante", "BrumeDesQuestions", "BrumeMetaphysique"] },
-  { id: "oracle", stages: ["OracleDuVendredi", "OracleDesIntervalles", "OracleDuDesaccord"] },
-  { id: "pigeon", stages: ["PigeonExistentiel", "PigeonPhilosophe", "PigeonExistentialiste"] },
-  { id: "plume", stages: ["PlumeDiscrete", "PlumeDuSoir", "PlumeBleueDuDesert"] },
-  { id: "renard", stages: ["RenardDuSoir", "RenardDeMinuit", "RenardDesHeuresCreuses"] },
-  { id: "echo", stages: ["EchoPatient", "EchoDesSilences", "EchoDesNuitsLongues"] },
-  { id: "colibri", stages: ["ColibriDuMatin", "ColibriDuSoir", "ColibriDe22h17"] },
-  { id: "scorpion", stages: ["ScorpionEnRetard", "ScorpionDiplomate", "ScorpionDesNuances"] },
-  { id: "nuage", stages: ["NuagePensif", "NuageDesIdees", "NuageDesIntervalles"] },
-  { id: "boussole", stages: ["BoussoleCurieuse", "BoussoleDuSoir", "BoussoleDesPossibles"] },
-  { id: "croissant", stages: ["CroissantMetaphysique", "CroissantDesTheories", "CroissantDuVertige"] },
-  { id: "lune", stages: ["LuneCurieuse", "LuneDesIdees", "LuneQuiRitDoucement"] },
+  { id: "mist", stages: ["RisingMist", "QuestingMist", "MetaphysicalMist"] },
+  { id: "oracle", stages: ["FridayOracle", "IntervalOracle", "DissentingOracle"] },
+  { id: "pigeon", stages: ["ExistentialPigeon", "PhilosophicalPigeon", "MetaphysicalPigeon"] },
+  { id: "feather", stages: ["QuietFeather", "EveningFeather", "DesertFeather"] },
+  { id: "fox", stages: ["EveningFox", "MidnightFox", "OffpeakFox"] },
+  { id: "echo", stages: ["PatientEcho", "SilentEcho", "LongNightEcho"] },
+  { id: "hummingbird", stages: ["MorningHumming", "EveningHumming", "LateHumming"] },
+  { id: "scorpion", stages: ["LateScorpion", "DiplomaticScorpion", "NuancedScorpion"] },
+  { id: "cloud", stages: ["PensiveCloud", "IdeaCloud", "IntervalCloud"] },
+  { id: "compass", stages: ["CuriousCompass", "EveningCompass", "OpenCompass"] },
+  { id: "lantern", stages: ["MetaphysicalLantern", "TheoreticalLantern", "VertigoLantern"] },
+  { id: "moon", stages: ["CuriousMoon", "IdeaMoon", "GentleMoon"] },
 ];
 
 export const MAX_ALIAS_STAGE = 3;
