@@ -2,13 +2,12 @@
 
 export const dynamic = "force-dynamic";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MODES, MODE_DETAIL, TOPICS } from "@/lib/nuance-data";
+import { MODES, MODE_DETAIL, TOPICS, AI_PERSONAS } from "@/lib/nuance-data";
 import { StatusBar, LiveDot } from "@/components/ui";
 
 const PER = 5 * 60;
-const PARTNER = "VoyageuseSereine";
 
 type Message = {
   who: "you" | "them" | "system";
@@ -17,12 +16,28 @@ type Message = {
   translated?: boolean;
 };
 
+// Pick a persona for this room based on mode
+function selectPersona(mode: string, personaId?: string | null) {
+  if (personaId) {
+    const found = AI_PERSONAS.find(p => p.id === personaId);
+    if (found) return found;
+  }
+  const matches = AI_PERSONAS.filter(p => p.modes.includes(mode as any));
+  const pool = matches.length > 0 ? matches : AI_PERSONAS;
+  if (pool.length === 0) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const search = useSearchParams();
   const mode = (search.get("mode") || "deep") as keyof typeof MODE_DETAIL;
+  const personaId = search.get("personaId");
   const m = MODES.find(x => x.id === mode)!;
   const topic = TOPICS[mode][0];
+  const persona = selectPersona(mode, personaId);
+  const partnerName = persona?.alias ?? "VoyageuseSereine";
+  const partnerLang = persona?.language ?? "French";
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
@@ -33,35 +48,32 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   const [themLeft, setThemLeft] = useState(PER);
   const [active, setActive] = useState<"you" | "them">("them");
   const [blocked, setBlocked] = useState(false);
+  const [listening, setListening] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
 
-  // Opening message from VoyageuseSereine on mount
+  // Opening message
   useEffect(() => {
     let cancelled = false;
     setTyping(true);
-    setActive("them");
-
     fetch("/api/room-reply", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        mode,
-        topic,
+        mode, topic,
+        personaId: persona?.id,
         messages: [],
-        userMessage: `[Opening] Start the conversation. The topic is: "${topic}". Give a short, genuine opening thought — 1-2 sentences.`,
+        userMessage: `[Opening] Start the conversation on this topic: "${topic}". Give a brief, genuine opening thought — 1-2 sentences. Don't ask a question yet, just open.`,
       }),
     })
       .then(r => r.json())
       .then(data => {
         if (cancelled) return;
         setTyping(false);
-        setMessages([{ who: "them", text: data.reply, turn: "Opening", translated: true }]);
+        setMessages([{ who: "them", text: data.reply, turn: "Opening", translated: partnerLang !== "English" }]);
         setActive("you");
       })
-      .catch(() => {
-        if (!cancelled) setTyping(false);
-      });
-
+      .catch(() => { if (!cancelled) setTyping(false); });
     return () => { cancelled = true; };
   }, []);
 
@@ -79,10 +91,48 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, typing, blocked]);
 
+  // Voice recognition setup
+  const startListening = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+    const rec = new SpeechRecognition();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = "en-US";
+    recognitionRef.current = rec;
+
+    rec.onresult = (event: any) => {
+      const transcript = Array.from(event.results as any[])
+        .map((r: any) => r[0].transcript)
+        .join("");
+      setDraft(transcript);
+    };
+
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    rec.start();
+    setListening(true);
+  }, []);
+
+  const stopListening = useCallback(() => {
+    recognitionRef.current?.stop();
+    setListening(false);
+  }, []);
+
+  function toggleVoice() {
+    if (!voice) {
+      setVoice(true);
+      startListening();
+    } else {
+      setVoice(false);
+      stopListening();
+    }
+  }
+
   const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
-  async function send() {
-    const text = draft.trim();
+  async function send(textOverride?: string) {
+    const text = (textOverride ?? draft).trim();
     if (!text || typing) return;
 
     if (/\b(stupid|idiot|hate)\b/i.test(text)) {
@@ -92,10 +142,11 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
     }
     setBlocked(false);
     setDraft("");
+    if (voice) stopListening();
 
     const userMsg: Message = { who: "you", text };
-    const nextMessages = [...messages, userMsg];
-    setMessages(nextMessages);
+    const nextMsgs = [...messages, userMsg];
+    setMessages(nextMsgs);
     setActive("them");
     setTyping(true);
 
@@ -104,19 +155,20 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mode,
-          topic,
-          messages: nextMessages.filter(m => m.who !== "system").map(m => ({ who: m.who, text: m.text })),
+          mode, topic,
+          personaId: persona?.id,
+          messages: nextMsgs.filter(m => m.who !== "system").map(m => ({ who: m.who, text: m.text })),
           userMessage: text,
         }),
       });
       const data = await res.json();
-      setMessages(prev => [...prev, { who: "them", text: data.reply, translated: true }]);
+      setMessages(prev => [...prev, { who: "them", text: data.reply, translated: partnerLang !== "English" }]);
     } catch {
-      setMessages(prev => [...prev, { who: "system", text: "Partner lost connection momentarily." }]);
+      setMessages(prev => [...prev, { who: "system", text: "Connection dropped momentarily." }]);
     } finally {
       setTyping(false);
       setActive("you");
+      if (voice) startListening();
     }
   }
 
@@ -133,7 +185,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
           </button>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              <span style={{ fontSize: 13.5 }}>{PARTNER}</span>
+              <span style={{ fontSize: 13.5 }}>{partnerName}</span>
               <LiveDot size={6} />
             </div>
             <p className="np-eyebrow" style={{ fontSize: 8, marginTop: 3 }}>{m.name} · {MODE_DETAIL[mode].structure}</p>
@@ -152,7 +204,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
 
         {/* Blitz clocks */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
-          {([{ key: "them", label: PARTNER, val: themLeft }, { key: "you", label: "You", val: youLeft }] as const).map(c => {
+          {([{ key: "them", label: partnerName, val: themLeft }, { key: "you", label: "You", val: youLeft }] as const).map(c => {
             const on = active === c.key;
             const low = c.val <= 30;
             return (
@@ -174,18 +226,17 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
 
         {/* Transcript */}
         <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 14, padding: "8px 2px" }}>
-
-          {/* Topic header */}
           <div style={{ textAlign: "center", padding: "4px 0 10px" }}>
             <p className="np-eyebrow" style={{ fontSize: 8.5 }}>Topic</p>
             <p style={{ margin: "8px 0 0", fontFamily: "var(--font-display)", fontSize: 16, fontStyle: "italic", lineHeight: 1.2 }}>"{topic}"</p>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, padding: "6px 12px", borderRadius: 999, border: "1px solid var(--line-soft)", background: "var(--panel)" }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M5 8h7M9 5v3c0 3.5-2 6-5 7" /><path d="M7 11c1 2 3 3.5 5 4" /><path d="m13 19 4-9 4 9M14.5 16h5" /></svg>
-              <span className="np-eyebrow" style={{ fontSize: 8 }}>Auto-translated · {PARTNER} speaks French</span>
-            </div>
+            {partnerLang !== "English" && (
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, padding: "6px 12px", borderRadius: 999, border: "1px solid var(--line-soft)", background: "var(--panel)" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M5 8h7M9 5v3c0 3.5-2 6-5 7" /><path d="M7 11c1 2 3 3.5 5 4" /><path d="m13 19 4-9 4 9M14.5 16h5" /></svg>
+                <span className="np-eyebrow" style={{ fontSize: 8 }}>Auto-translated · {partnerName} speaks {partnerLang}</span>
+              </div>
+            )}
           </div>
 
-          {/* Messages */}
           {messages.map((msg, i) => {
             if (msg.who === "system") {
               return (
@@ -204,14 +255,13 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
                 {msg.translated && (
                   <div style={{ display: "flex", alignItems: "center", gap: 5, margin: "5px 4px 0" }}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 8h7M9 5v3c0 3.5-2 6-5 7" /><path d="M7 11c1 2 3 3.5 5 4" /><path d="m13 19 4-9 4 9M14.5 16h5" /></svg>
-                    <span style={{ fontSize: 10, color: "var(--faint)" }}>Translated · French</span>
+                    <span style={{ fontSize: 10, color: "var(--faint)" }}>Translated · {partnerLang}</span>
                   </div>
                 )}
               </div>
             );
           })}
 
-          {/* Typing indicator */}
           {typing && (
             <div style={{ alignSelf: "flex-start", maxWidth: "84%" }}>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "12px 15px", borderRadius: 18, borderTopLeftRadius: 6, background: "var(--panel)", border: "1px solid var(--line-soft)" }}>
@@ -219,13 +269,12 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
                   <span key={i} style={{ width: 6, height: 6, borderRadius: 999, background: "var(--muted)", animation: `npType 1.2s ease-in-out ${i * 0.2}s infinite` }} />
                 ))}
                 <span style={{ marginLeft: 4, fontSize: 10, color: "var(--faint)", fontFamily: "var(--font-caps)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                  {voice ? "Speaking · French" : "Typing · French"}
+                  Typing · {partnerLang}
                 </span>
               </div>
             </div>
           )}
 
-          {/* Blocked note */}
           {blocked && (
             <div style={{ alignSelf: "flex-end", maxWidth: "84%", padding: "9px 14px", borderRadius: 14, border: "1px solid var(--danger)", background: "rgba(224,121,111,0.08)" }}>
               <p style={{ margin: 0, fontSize: 11, lineHeight: 1.4, color: "var(--danger)" }}>Held by moderation — this message wasn't delivered.</p>
@@ -235,26 +284,49 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
 
         {/* Composer */}
         <div style={{ paddingTop: 8, borderTop: "1px solid var(--line-soft)", marginTop: 4 }}>
+          {/* Voice transcript preview */}
+          {listening && draft && (
+            <div style={{ marginBottom: 6, padding: "8px 12px", borderRadius: 12, border: "1px solid var(--accent)", background: "rgba(241,241,235,0.06)", fontSize: 12, color: "var(--text)", lineHeight: 1.4 }}>
+              <span style={{ marginRight: 6, fontFamily: "var(--font-caps)", fontSize: 8, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--accent)" }}>Live</span>
+              {draft}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button onClick={() => setVoice(v => !v)} style={{ flex: "0 0 auto", width: 44, height: 44, borderRadius: 999, border: "1px solid var(--line)", background: voice ? "var(--accent)" : "var(--panel)", color: voice ? "var(--on-accent)" : "var(--text)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="2" width="6" height="11" rx="3" /><path d="M5 10a7 7 0 0 0 14 0M12 19v4M8 23h8" /></svg>
+            {/* Mic button */}
+            <button
+              onClick={toggleVoice}
+              style={{ flex: "0 0 auto", width: 44, height: 44, borderRadius: 999, border: "1px solid " + (listening ? "var(--accent)" : "var(--line)"), background: listening ? "var(--accent)" : "var(--panel)", color: listening ? "var(--on-accent)" : "var(--text)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}
+            >
+              {listening && (
+                <span style={{ position: "absolute", inset: -3, borderRadius: 999, border: "2px solid var(--accent)", opacity: 0.4, animation: "npPulse 1.4s ease-in-out infinite" }} />
+              )}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="2" width="6" height="11" rx="3" />
+                <path d="M5 10a7 7 0 0 0 14 0M12 19v4M8 23h8" />
+              </svg>
             </button>
+
+            {/* Text input */}
             <input
               value={draft}
               onChange={e => setDraft(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && send()}
-              placeholder={voice ? "Voice is live — or type…" : "Say something honest…"}
+              placeholder={listening ? "Speaking… press send when done" : "Say something honest…"}
               style={{ flex: 1, padding: "11px 14px", borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)", color: "var(--text)", fontSize: 13, outline: "none" }}
             />
+
+            {/* Send */}
             <button
-              onClick={send}
+              onClick={() => send()}
               disabled={!draft.trim() || typing}
               style={{ flex: "0 0 auto", width: 44, height: 44, borderRadius: 999, background: draft.trim() && !typing ? "var(--accent)" : "var(--panel)", border: "1px solid var(--line)", color: draft.trim() && !typing ? "var(--on-accent)" : "var(--faint)", cursor: draft.trim() && !typing ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center" }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" /></svg>
             </button>
           </div>
-          <p style={{ textAlign: "center", marginTop: 8, fontFamily: "var(--font-caps)", fontSize: 8, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--faint)" }}>Every message is moderated · report & block always available</p>
+          <p style={{ textAlign: "center", marginTop: 8, fontFamily: "var(--font-caps)", fontSize: 8, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--faint)" }}>
+            {listening ? "Mic is live — your speech appears above" : "Every message is moderated · report & block always available"}
+          </p>
         </div>
       </div>
     </div>
