@@ -69,9 +69,10 @@ function MatchmakingPageInner() {
 
   useEffect(() => {
     if (!matched) return;
-    // Both real and AI matches go through topic selection first
+    // Real rooms: skip topic screen — topic is deterministic from roomId
+    // AI rooms: go through topic screen so user can see/reroll
     const dest = matchType === "real" && roomId
-      ? `/topic?mode=${mode}&matchType=real&roomId=${roomId}`
+      ? `/room/${roomId}?mode=${mode}&matchType=real`
       : `/topic?mode=${mode}&matchType=ai`;
     const t = setTimeout(() => router.push(dest as any), 1400);
     return () => clearTimeout(t);
