@@ -110,44 +110,21 @@ export async function POST(request: Request) {
 }
 
 async function doMatch(db: any, userId: string, mode: string) {
-  // Find any waiting partner (same mode preferred)
-  const { data: allWaiting, error: qe } = await db
-    .from("matchmaking_queue")
-    .select("*")
-    .eq("status", "waiting")
-    .neq("user_id", userId)
-    .order("created_at", { ascending: true })
-    .limit(10);
+  // Use atomic Postgres function — SELECT FOR UPDATE SKIP LOCKED prevents
+  // two concurrent calls from matching the same pair into different rooms
+  const { data, error } = await db.rpc("try_match_user", {
+    p_user_id: userId,
+    p_mode: mode,
+  });
 
-  if (qe) return NextResponse.json({ matched: false, error: `Queue query: ${qe.message}` });
-
-  if (!allWaiting || allWaiting.length === 0) {
-    return NextResponse.json({ matched: false, waiting: 0 });
+  if (error) {
+    console.error("[match] rpc error:", error.message);
+    return NextResponse.json({ matched: false, error: error.message });
   }
 
-  // Prefer same mode, fall back to any
-  const partner = allWaiting.find((r: any) => r.mode === mode) ?? allWaiting[0];
+  const result = Array.isArray(data) ? data[0] : data;
+  if (!result?.matched) return NextResponse.json({ matched: false });
 
-  // Create room
-  const { data: room, error: re } = await db.from("rooms")
-    .insert({ mode, status: "live" }).select().single();
-  if (re || !room) return NextResponse.json({ matched: false, error: `Room: ${re?.message}` });
-
-  // Add participants
-  const { error: pe } = await db.from("room_participants").insert([
-    { room_id: room.id, user_id: userId },
-    { room_id: room.id, user_id: partner.user_id },
-  ]);
-  if (pe) return NextResponse.json({ matched: false, error: `Participants: ${pe.message}` });
-
-  // Mark queue entries matched
-  await db.from("matchmaking_queue")
-    .update({ status: "matched", matched_at: new Date().toISOString() })
-    .eq("user_id", userId).eq("status", "waiting");
-  await db.from("matchmaking_queue")
-    .update({ status: "matched", matched_at: new Date().toISOString() })
-    .eq("user_id", partner.user_id).eq("status", "waiting");
-
-  console.log(`[match] ${userId} ↔ ${partner.user_id} → room ${room.id}`);
-  return NextResponse.json({ matched: true, roomId: room.id });
+  console.log(`[match] ${userId} → room ${result.room_id}`);
+  return NextResponse.json({ matched: true, roomId: result.room_id });
 }
