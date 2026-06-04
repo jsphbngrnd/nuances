@@ -33,8 +33,31 @@ async function authClient() {
   );
 }
 
-async function tryMatch(admin: ReturnType<typeof adminClient>, userId: string, mode: string) {
-  const { data: candidates } = await admin!.from("matchmaking_queue")
+// Ensure a public.users record exists — creates a minimal one if missing
+// so users who skipped onboarding can still join the queue
+async function ensureUserExists(admin: any, userId: string) {
+  const { data } = await admin.from("users").select("id").eq("id", userId).single();
+  if (!data) {
+    const adjectives = ["Wandering", "Quiet", "Patient", "Curious", "Silent"];
+    const nouns = ["Echo", "Mist", "Fox", "Moon", "Tide"];
+    const alias = adjectives[Math.floor(Math.random() * adjectives.length)] +
+                  nouns[Math.floor(Math.random() * nouns.length)];
+    await admin.from("users").insert({
+      id: userId,
+      display_name: alias,
+      alias,
+      alias_family: "mixed",
+      alias_stage: 1,
+      age_range: "25-34",
+      language: "en",
+      country: "unknown",
+      trust_score: 0.9,
+    });
+  }
+}
+
+async function tryMatch(admin: any, userId: string, mode: string) {
+  const { data: candidates, error: candErr } = await admin.from("matchmaking_queue")
     .select("*")
     .eq("mode", mode)
     .eq("status", "waiting")
@@ -42,22 +65,29 @@ async function tryMatch(admin: ReturnType<typeof adminClient>, userId: string, m
     .order("created_at", { ascending: true })
     .limit(1);
 
+  if (candErr) console.error("[matchmaking] candidate query error:", candErr.message);
+
   const partner = candidates?.[0];
   if (!partner) return NextResponse.json({ matched: false });
 
-  const { data: room, error: roomErr } = await admin!.from("rooms")
+  const { data: room, error: roomErr } = await admin.from("rooms")
     .insert({ mode, status: "live" })
     .select()
     .single();
 
-  if (roomErr || !room) return NextResponse.json({ matched: false });
+  if (roomErr || !room) {
+    console.error("[matchmaking] room creation error:", roomErr?.message);
+    return NextResponse.json({ matched: false });
+  }
 
-  await admin!.from("room_participants").insert([
+  const { error: partErr } = await admin.from("room_participants").insert([
     { room_id: room.id, user_id: userId },
     { room_id: room.id, user_id: partner.user_id },
   ]);
 
-  await admin!.from("matchmaking_queue")
+  if (partErr) console.error("[matchmaking] participants error:", partErr.message);
+
+  await admin.from("matchmaking_queue")
     .update({ status: "matched", matched_at: new Date().toISOString() })
     .in("user_id", [userId, partner.user_id]);
 
@@ -76,11 +106,21 @@ export async function POST(request: Request) {
   }
 
   if (body.action === "enter" && body.mode) {
+    // Ensure user exists in public.users (FK dependency)
+    await ensureUserExists(admin, user.id);
+
     // Cancel any existing entry then insert fresh
     await admin.from("matchmaking_queue")
       .update({ status: "cancelled" }).eq("user_id", user.id);
-    await admin.from("matchmaking_queue")
+
+    const { error: insertErr } = await admin.from("matchmaking_queue")
       .insert({ user_id: user.id, mode: body.mode, language: "en", country: "unknown", status: "waiting" });
+
+    if (insertErr) {
+      console.error("[matchmaking] queue insert error:", insertErr.message);
+      return NextResponse.json({ matched: false, error: insertErr.message });
+    }
+
     return tryMatch(admin, user.id, body.mode);
   }
 
