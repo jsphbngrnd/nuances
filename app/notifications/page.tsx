@@ -25,11 +25,18 @@ export default function NotificationsPage() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { setLoading(false); return; }
 
-      // Find reconnect invites where someone voted yes for us but we haven't voted
-      const { data } = await supabase
-        .from("reconnects")
-        .select("id, room_id, user_a_id, user_b_id, user_a_vote, user_b_vote, rooms(mode)")
-        .or(`and(user_b_id.eq.${user.id},user_a_vote.eq.true,user_b_vote.is.null),and(user_a_id.eq.${user.id},user_b_vote.eq.true,user_a_vote.is.null)`);
+      // Two separate queries (compound nested AND+OR not supported in PostgREST JS)
+      const [{ data: d1 }, { data: d2 }] = await Promise.all([
+        // They're user_a, voted yes — we're user_b, haven't voted
+        supabase.from("reconnects")
+          .select("id, room_id, user_a_id, user_b_id, user_a_vote, user_b_vote, rooms(mode)")
+          .eq("user_b_id", user.id).eq("user_a_vote", true).is("user_b_vote", null),
+        // We're user_a, they're user_b, voted yes — we haven't voted
+        supabase.from("reconnects")
+          .select("id, room_id, user_a_id, user_b_id, user_a_vote, user_b_vote, rooms(mode)")
+          .eq("user_a_id", user.id).eq("user_b_vote", true).is("user_a_vote", null),
+      ]);
+      const data = [...(d1 ?? []), ...(d2 ?? [])];
 
       if (data && data.length > 0) {
         // Fetch sender aliases

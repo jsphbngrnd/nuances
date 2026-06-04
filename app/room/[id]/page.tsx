@@ -77,6 +77,9 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   const partnerLang = matchType === "real" ? "English" : (persona?.language ?? "English");
 
   const [messages, setMessages] = useState<Msg[]>([]);
+  const messagesRef = useRef<Msg[]>([]); // always-current ref for event handlers
+  // Keep ref in sync
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
   const [draft, setDraft] = useState("");
   const [aiTyping, setAiTyping] = useState(false);
   const [turn, setTurn] = useState<Turn>("them");
@@ -163,11 +166,16 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
       setMessages(prev => [...prev, { who: "system", text: `${partnerName}'s time is up. It's your turn.` }]);
     });
 
-    // Partner ended the conversation → we also navigate to summary
+    // Partner ended the conversation → save our messages (from ref, always current) and navigate
     channel.on("broadcast", { event: "end" }, () => {
       sessionStorage.setItem("nuance-room", JSON.stringify({
         mode, topic, partnerAlias: partnerName,
-        messages: [],
+        roomId: roomId ?? null,
+        // Use ref so we get current messages, not the empty array captured at setup time
+        // Flip who/them since we're now the "other" perspective in summary
+        messages: messagesRef.current
+          .filter(m => m.who !== "system")
+          .map(m => ({ who: m.who, text: m.text })),
       }));
       router.push(`/summary/live?mode=${mode}`);
     });

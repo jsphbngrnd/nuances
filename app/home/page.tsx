@@ -13,13 +13,16 @@ import { createClient } from "@/lib/supabase/client";
 export default function HomePage() {
   const t = useCopy();
   const router = useRouter();
-  const [online, setOnline] = useState(142);
+  const [online, setOnline] = useState<number | null>(null);
   const [selected, setSelected] = useState("deep");
   const [alias, setAlias] = useState("…");
   const [reconnects, setReconnects] = useState<{ id: string; alias: string }[]>([]);
 
   useEffect(() => {
-    const timer = setInterval(() => setOnline(o => Math.min(210, Math.max(120, o + (Math.floor(Math.random() * 5) - 2)))), 3000);
+    // Fetch real online count, refresh every 30s
+    const fetchOnline = () => fetch("/api/online-count").then(r => r.json()).then(d => setOnline(d.count)).catch(() => {});
+    fetchOnline();
+    const timer = setInterval(fetchOnline, 30_000);
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
@@ -68,7 +71,7 @@ export default function HomePage() {
           </p>
           <div style={{ position: "relative", display: "inline-flex", alignItems: "center", gap: 8, marginTop: 16, padding: "8px 15px", borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)" }}>
             <LiveDot size={7} />
-            <span className="np-eyebrow" style={{ fontSize: 9 }}>{online} {t.home.online}</span>
+            <span className="np-eyebrow" style={{ fontSize: 9 }}>{online !== null ? online : "—"} {t.home.online}</span>
           </div>
         </div>
 

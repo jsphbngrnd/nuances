@@ -14,15 +14,26 @@ export default function AccountPage() {
   const router = useRouter();
   const [theme, setTheme] = useState<"night" | "day">("night");
   const [alias, setAlias] = useState("…");
+  const [stats, setStats] = useState({ trustScore: "—", reconnectCount: "—", reachEnd: "—" });
 
   useEffect(() => {
     if (localStorage.getItem("nuance-theme") === "day") setTheme("day");
-    // Fetch real alias from Supabase
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
-      const { data } = await supabase.from("users").select("alias, display_name").eq("id", user.id).single();
-      if (data?.alias) setAlias(data.alias);
+      // Fetch profile
+      const { data: u } = await supabase.from("users").select("alias, display_name, trust_score").eq("id", user.id).single();
+      if (u?.alias) setAlias(u.alias);
+      // Fetch reconnect count (mutual)
+      const { count: recCount } = await supabase
+        .from("reconnects").select("id", { count: "exact", head: true })
+        .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`)
+        .eq("user_a_vote", true).eq("user_b_vote", true);
+      setStats({
+        trustScore: u?.trust_score != null ? Number(u.trust_score).toFixed(3) : "—",
+        reconnectCount: String(recCount ?? 0),
+        reachEnd: "—", // would need summary table query
+      });
     });
   }, []);
   const [name, setName] = useState("");
@@ -75,7 +86,7 @@ export default function AccountPage() {
           </div>
           <div className="np-hairline" style={{ margin: "16px 0" }} />
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-            {[["0.910", t.account.trustScore], ["3", t.account.reconnectsCount], ["72%", t.account.reachEnd]].map(([n, l]) => (
+            {[[stats.trustScore, t.account.trustScore], [stats.reconnectCount, t.account.reconnectsCount], [stats.reachEnd, t.account.reachEnd]].map(([n, l]) => (
               <div key={l} style={{ textAlign: "center" }}>
                 <p className="np-display" style={{ fontSize: 22 }}>{n}</p>
                 <p className="np-eyebrow" style={{ fontSize: 8, marginTop: 5 }}>{l}</p>
