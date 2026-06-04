@@ -22,14 +22,24 @@ export async function GET(request: NextRequest) {
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
-  const { data } = await admin
+  // Ordered by joined_at — earliest entry speaks first
+  const { data: participants } = await admin
     .from("room_participants")
-    .select("user_id, users(alias, display_name)")
+    .select("user_id, joined_at, users(alias, display_name)")
     .eq("room_id", roomId)
-    .neq("user_id", user.id)
-    .limit(1)
-    .maybeSingle();
+    .order("joined_at", { ascending: true });
 
-  const users = data?.users as any;
-  return NextResponse.json({ alias: users?.alias ?? null, displayName: users?.display_name ?? null });
+  if (!participants || participants.length === 0) {
+    return NextResponse.json({ error: "Room not found" }, { status: 404 });
+  }
+
+  const myIndex = participants.findIndex(p => p.user_id === user.id);
+  const partnerEntry = participants.find(p => p.user_id !== user.id);
+  const partnerUsers = partnerEntry?.users as any;
+
+  return NextResponse.json({
+    alias: partnerUsers?.alias ?? null,
+    displayName: partnerUsers?.display_name ?? null,
+    isFirst: myIndex === 0, // first joined = first to speak
+  });
 }

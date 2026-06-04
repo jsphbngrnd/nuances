@@ -83,54 +83,50 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   const channelRef = useRef<any>(null);
 
   const isAi = matchType === "ai";
-  const sendDisabled = !draft.trim() || (isAi && aiTyping) || (isAi && turn !== "you");
+  // For real rooms, only allow sending when it's your turn
+  const sendDisabled = !draft.trim() || (isAi ? (aiTyping || turn !== "you") : turn !== "you");
 
-  // ── Clock ─────────────────────────────────────────────────────
+  // ── Clock — only active player's timer ticks ──────────────────
   useEffect(() => {
     const id = setInterval(() => {
-      if (isAi) {
-        if (turn === "you") setYouLeft(v => Math.max(0, v - 1));
-        else setThemLeft(v => Math.max(0, v - 1));
-      } else {
-        // In real rooms both clocks run — your clock while you're composing
-        setYouLeft(v => Math.max(0, v - 1));
-      }
+      if (turn === "you") setYouLeft(v => Math.max(0, v - 1));
+      else setThemLeft(v => Math.max(0, v - 1));
     }, 1000);
     return () => clearInterval(id);
-  }, [turn, isAi]);
+  }, [turn]);
 
   // ── Auto-scroll ───────────────────────────────────────────────
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, aiTyping]);
 
-  // ── Real room: Supabase Broadcast channel ────────────────────
-  // Broadcast is simpler than postgres_changes — no table replication needed
+  // ── Real room: Broadcast channel + coordinated turns ─────────
   useEffect(() => {
     if (!roomId || isAi) return;
     const supabase = createClient();
 
-    // Fetch partner alias
+    // Fetch partner alias + who speaks first (based on joined_at order)
     fetch(`/api/room-partner?roomId=${roomId}`)
       .then(r => r.json())
-      .then(d => { if (d.alias) setPartnerName(d.alias); })
-      .catch(() => {});
+      .then(d => {
+        if (d.alias) setPartnerName(d.alias);
+        // First to join the room speaks first
+        setTurn(d.isFirst ? "you" : "them");
+      })
+      .catch(() => setTurn("you"));
 
-    // Join broadcast channel — both users in same room share this channel
+    // Shared broadcast channel
     const channel = supabase.channel(`room-${roomId}`, {
-      config: { broadcast: { self: false } }, // don't echo own messages
+      config: { broadcast: { self: false } },
     });
 
+    // Receive partner's message → their turn ends → our turn starts
     channel.on("broadcast", { event: "message" }, (payload: any) => {
       setMessages(prev => [...prev, { who: "them", text: payload.payload.text }]);
+      setTurn("you"); // partner spoke → now it's our turn
     });
 
-    channel.subscribe((status) => {
-      if (status === "SUBSCRIBED") {
-        setTurn("you");
-      }
-    });
-
+    channel.subscribe();
     channelRef.current = channel;
     return () => { supabase.removeChannel(channel); };
   }, [roomId, isAi]);
@@ -182,13 +178,14 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
     stopListening();
 
     if (!isAi && roomId && channelRef.current) {
-      // Real room — broadcast directly to partner via shared channel
+      // Real room — broadcast to partner, then pass the turn to them
       channelRef.current.send({
         type: "broadcast",
         event: "message",
         payload: { text },
       });
       setMessages(prev => [...prev, { who: "you", text }]);
+      setTurn("them"); // I spoke → now it's their turn
       return;
     }
 
@@ -380,13 +377,9 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
         {/* Composer */}
         <div style={{ paddingTop: 8, borderTop: "1px solid var(--line-soft)", marginTop: 4 }}>
           <div style={{ marginBottom: 6, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            {isAi ? (
-              <span className="np-eyebrow" style={{ fontSize: 7.5, color: turn === "you" ? "var(--positive)" : "var(--faint)" }}>
-                {turn === "you" ? "▶ Your turn" : `▶ ${partnerName} is replying…`}
-              </span>
-            ) : (
-              <span className="np-eyebrow" style={{ fontSize: 7.5, color: "var(--positive)" }}>▶ Type or speak</span>
-            )}
+            <span className="np-eyebrow" style={{ fontSize: 7.5, color: turn === "you" ? "var(--positive)" : "var(--faint)" }}>
+              {turn === "you" ? "▶ Your turn" : `▶ ${partnerName} is typing…`}
+            </span>
             <button onClick={endConversation} style={{ background: "transparent", border: "none", cursor: "pointer", fontFamily: "var(--font-caps)", fontSize: 7.5, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--danger)", padding: 0 }}>
               End conversation
             </button>
@@ -400,14 +393,14 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
           )}
 
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <button onClick={toggleMic} disabled={isAi && turn !== "you"} style={{ flex: "0 0 auto", width: 44, height: 44, borderRadius: 999, border: `1px solid ${listening ? "var(--accent)" : "var(--line)"}`, background: listening ? "var(--accent)" : "var(--panel)", color: listening ? "var(--on-accent)" : "var(--text)", cursor: (isAi && turn !== "you") ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+            <button onClick={toggleMic} disabled={turn !== "you"} style={{ flex: "0 0 auto", width: 44, height: 44, borderRadius: 999, border: `1px solid ${listening ? "var(--accent)" : "var(--line)"}`, background: listening ? "var(--accent)" : "var(--panel)", color: listening ? "var(--on-accent)" : turn !== "you" ? "var(--faint)" : "var(--text)", cursor: turn !== "you" ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
               {listening && <span style={{ position: "absolute", inset: -3, borderRadius: 999, border: "2px solid var(--accent)", opacity: 0.4, animation: "npPulse 1.4s ease-in-out infinite" }} />}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="2" width="6" height="11" rx="3" /><path d="M5 10a7 7 0 0 0 14 0M12 19v4M8 23h8" /></svg>
             </button>
             <input value={draft} onChange={e => setDraft(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && send()}
-              disabled={isAi && (aiTyping || turn !== "you")}
-              placeholder={isAi && turn !== "you" ? `${partnerName} is replying…` : listening ? t.room.voicePlaceholder : t.room.placeholder}
-              style={{ flex: 1, padding: "11px 14px", borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel-2)", color: "var(--text)", fontSize: 16, outline: "none", opacity: (isAi && (aiTyping || turn !== "you")) ? 0.5 : 1 }}
+              disabled={turn !== "you"}
+              placeholder={turn !== "you" ? `${partnerName} is typing…` : listening ? t.room.voicePlaceholder : t.room.placeholder}
+              style={{ flex: 1, padding: "11px 14px", borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel-2)", color: "var(--text)", fontSize: 16, outline: "none", opacity: turn !== "you" ? 0.5 : 1 }}
             />
             <button onClick={send} disabled={sendDisabled} style={{ flex: "0 0 auto", width: 44, height: 44, borderRadius: 999, background: !sendDisabled ? "var(--accent)" : "var(--panel)", border: "1px solid var(--line)", color: !sendDisabled ? "var(--on-accent)" : "var(--faint)", cursor: !sendDisabled ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z" /></svg>
