@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MODES, MODE_DETAIL, TOPICS, AI_PERSONAS } from "@/lib/nuance-data";
 import { LiveDot } from "@/components/ui";
-import { useCopy } from "@/lib/use-copy";
+import { useCopy, useLocale } from "@/lib/use-copy";
 
 const PER = 5 * 60; // 5 minutes per player
 
@@ -31,6 +31,7 @@ function selectPersona(mode: string, personaId?: string | null) {
 
 function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   const t = useCopy();
+  const locale = useLocale();
   const router = useRouter();
   const search = useSearchParams();
   const mode = (search.get("mode") || "deep") as keyof typeof MODE_DETAIL;
@@ -39,7 +40,8 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   // Pick a random topic once per room (stable via useRef so it doesn't change on re-render)
   const topicRef = useRef(topicPool[Math.floor(Math.random() * topicPool.length)]);
   const topic = topicRef.current;
-  const persona = selectPersona(mode, search.get("personaId"));
+  const personaRef = useRef(selectPersona(mode, search.get("personaId")));
+  const persona = personaRef.current;
   const partnerName = persona?.alias ?? "PatientEcho";
   const partnerLang = persona?.language ?? "English";
 
@@ -86,6 +88,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
       body: JSON.stringify({
         mode, topic,
         personaId: persona?.id,
+          locale,
         messages: [],
         userMessage: `[Opening] Start the conversation: "${topic}". One or two sentences, genuine. No question yet.`,
       }),
@@ -96,7 +99,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
         if (d.reply?.startsWith("(OpenAI") || d.reply?.startsWith("(No OpenAI")) {
           setError(d.reply);
         } else {
-          setMessages([{ who: "them", text: d.reply, translated: partnerLang !== "English" }]);
+          setMessages([{ who: "them", text: d.reply, translated: partnerLang !== (locale === "fr" ? "French" : "English") }]);
         }
         setAiTyping(false);
         setTurn("you");
@@ -138,6 +141,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
         body: JSON.stringify({
           mode, topic,
           personaId: persona?.id,
+          locale,
           messages: next.filter(m => m.who !== "system").map(m => ({ who: m.who, text: m.text })),
           userMessage: text,
         }),
@@ -150,7 +154,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
         setError(data.reply);
         setTurn("you");
       } else {
-        setMessages(prev => [...prev, { who: "them", text: data.reply, translated: partnerLang !== "English" }]);
+        setMessages(prev => [...prev, { who: "them", text: data.reply, translated: partnerLang !== (locale === "fr" ? "French" : "English") }]);
         setTurn("you");
       }
     } catch {

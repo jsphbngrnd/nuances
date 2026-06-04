@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MODES } from "@/lib/nuance-data";
 import { StatusBar, Screen, ArrowIcon } from "@/components/ui";
-import { useCopy } from "@/lib/use-copy";
+import { useCopy, useLocale } from "@/lib/use-copy";
 
 type Rec = { kind: string; title: string; source: string; reason?: string };
 type Summary = {
@@ -21,6 +21,7 @@ type Summary = {
 
 function SummaryPageInner() {
   const t = useCopy();
+  const locale = useLocale();
   const router = useRouter();
   const search = useSearchParams();
   const mode = search.get("mode") || "deep";
@@ -66,6 +67,7 @@ function SummaryPageInner() {
         mode: roomData.mode,
         topic: roomData.topic,
         partnerAlias: roomData.partnerAlias,
+        locale,
         messages: roomData.messages,
       }),
     })

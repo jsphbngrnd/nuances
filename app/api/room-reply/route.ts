@@ -6,6 +6,7 @@ const bodySchema = z.object({
   mode: z.string(),
   topic: z.string(),
   personaId: z.string().optional(),
+  locale: z.string().optional().default("en"),
   messages: z.array(z.object({
     who: z.enum(["you", "them"]),
     text: z.string(),
@@ -25,7 +26,7 @@ const DEFAULT_PERSONA_PROMPT = `You are VoyageuseSereine — thoughtful, honest,
 
 export async function POST(request: Request) {
   const body = bodySchema.parse(await request.json());
-  const { mode, topic, personaId, messages, userMessage } = body;
+  const { mode, topic, personaId, locale, messages, userMessage } = body;
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -56,6 +57,8 @@ Topic: "${topic}"
 Mode: ${mode}
 
 ${modeInstruction}
+
+Language: Respond ONLY in ${locale === "fr" ? "French" : "English"}. Always.
 
 Critical rules:
 - Always lead with YOUR OWN genuine opinion or position first. Say what you actually think before reacting to theirs.

@@ -5,6 +5,7 @@ const bodySchema = z.object({
   mode: z.string(),
   topic: z.string(),
   partnerAlias: z.string(),
+  locale: z.string().optional().default("en"),
   messages: z.array(z.object({
     who: z.enum(["you", "them"]),
     text: z.string(),
@@ -13,7 +14,7 @@ const bodySchema = z.object({
 
 export async function POST(request: Request) {
   const body = bodySchema.parse(await request.json());
-  const { mode, topic, partnerAlias, messages } = body;
+  const { mode, topic, partnerAlias, locale, messages } = body;
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
     .map(m => `${m.who === "you" ? "You" : partnerAlias}: ${m.text}`)
     .join("\n");
 
-  const systemPrompt = `You are generating a brief post-conversation summary for NUANCE.
+  const systemPrompt = `You are generating a brief post-conversation summary for NUANCE. Respond entirely in ${locale === "fr" ? "French" : "English"}.
 The conversation was in "${mode}" mode on the topic: "${topic}".
 
 Return a JSON object with exactly these fields — keep everything short and grounded in what was actually said:
