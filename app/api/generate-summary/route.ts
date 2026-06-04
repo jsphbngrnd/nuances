@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ error: "No API key" }, { status: 500 });
+    return NextResponse.json({ error: "No OpenAI API key — add OPENAI_API_KEY to Vercel environment variables" }, { status: 500 });
   }
 
   const transcript = messages

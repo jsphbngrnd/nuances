@@ -52,6 +52,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   const [blocked, setBlocked] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const recRef = useRef<any>(null);
+  const openingFired = useRef(false); // guard against StrictMode double-fire
   const sendDisabled = !draft.trim() || aiTyping || turn !== "you";
 
   // ── Clock: only the active player's timer ticks ──────────────
@@ -70,6 +71,8 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
 
   // ── Partner opens the conversation ────────────────────────────
   useEffect(() => {
+    if (openingFired.current) return; // prevent StrictMode double-fire
+    openingFired.current = true;
     let cancelled = false;
     setAiTyping(true);
     setTurn("them");

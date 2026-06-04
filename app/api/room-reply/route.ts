@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return NextResponse.json({ reply: "…", persona: "VoyageuseSereine" });
+    return NextResponse.json({ reply: "(No OpenAI API key — add OPENAI_API_KEY to your environment variables)" });
   }
 
   // Select persona: use specified one, or pick best match for mode, or random
