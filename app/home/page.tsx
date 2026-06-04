@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 import { MODES, SUMMARY } from "@/lib/nuance-data";
 import { StatusBar, Screen, MiniNav, LiveDot, ModeGlyph, ArrowIcon } from "@/components/ui";
 import { useCopy } from "@/lib/use-copy";
+import { createClient } from "@/lib/supabase/client";
 
-const ALIAS = "OracleDuVendredi";
 const RECONNECTS_PREVIEW = [
   { name: "Mara", mode: "Late Night", status: "Mutual", topic: "What are you carrying that people don't see?" },
   { name: "Ilan", mode: "Debate", status: "Pending", topic: "Does money make people freer?" },
@@ -19,10 +19,18 @@ export default function HomePage() {
   const router = useRouter();
   const [online, setOnline] = useState(142);
   const [selected, setSelected] = useState("deep");
+  const [alias, setAlias] = useState("…");
 
   useEffect(() => {
-    const t = setInterval(() => setOnline(o => Math.min(210, Math.max(120, o + (Math.floor(Math.random() * 5) - 2)))), 3000);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setOnline(o => Math.min(210, Math.max(120, o + (Math.floor(Math.random() * 5) - 2)))), 3000);
+    // Fetch real alias
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data } = await supabase.from("users").select("alias").eq("id", user.id).single();
+      if (data?.alias) setAlias(data.alias);
+    });
+    return () => clearInterval(timer);
   }, []);
 
   return (
@@ -33,9 +41,9 @@ export default function HomePage() {
         {/* Profile chip */}
         <button onClick={() => router.push("/account")} style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 999, border: "1px solid var(--line-soft)", background: "var(--panel)", cursor: "pointer", color: "var(--text)", font: "inherit", marginBottom: 22 }}>
           <span style={{ width: 28, height: 28, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel-2)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 13, flex: "0 0 auto" }}>
-            {ALIAS.charAt(0)}
+            {alias.charAt(0)}
           </span>
-          <span className="np-eyebrow" style={{ fontSize: 9, flex: 1, textAlign: "left" }}>{t.home.greeting} · {ALIAS}</span>
+          <span className="np-eyebrow" style={{ fontSize: 9, flex: 1, textAlign: "left" }}>{t.home.greeting} · {alias}</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
         </button>
 

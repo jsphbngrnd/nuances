@@ -21,6 +21,7 @@ function MatchmakingPageInner() {
   const [matched, setMatched] = useState(false);
   const [matchType, setMatchType] = useState<"real" | "ai" | null>(null);
   const [roomId, setRoomId] = useState<string | null>(null);
+  const [debugMsg, setDebugMsg] = useState("");
 
   useEffect(() => {
     const tick = setInterval(() => setSecs(s => s + 1), 1000);
@@ -32,6 +33,7 @@ function MatchmakingPageInner() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "enter", mode }),
     }).then(r => r.json()).then(data => {
+      if (data.error) setDebugMsg(data.error);
       if (data.matched && !realMatchFound) {
         realMatchFound = true;
         clearInterval(pollReal);
@@ -125,6 +127,10 @@ function MatchmakingPageInner() {
                 : t.matchmaking.subAiFound
               : t.matchmaking.subSearching}
           </p>
+
+          {debugMsg && (
+            <p style={{ margin: "12px auto 0", fontSize: 10, color: "var(--danger)", maxWidth: "28ch", textAlign: "center" }}>{debugMsg}</p>
+          )}
 
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 22, padding: "8px 15px", borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)" }}>
             <ModeGlyph glyph={m.glyph} size={15} />
