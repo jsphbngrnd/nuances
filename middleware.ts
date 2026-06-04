@@ -45,6 +45,7 @@ export async function middleware(request: NextRequest) {
       "/topic",
       "/summary",
       "/onboarding",
+      "/account",
     ];
 
     const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
