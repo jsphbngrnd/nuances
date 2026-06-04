@@ -39,7 +39,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${display.variable} ${sans.variable} ${caps.variable}`}
+      className={`dark ${display.variable} ${sans.variable} ${caps.variable}`}
     >
       <body>
         <DayNightTheme />
