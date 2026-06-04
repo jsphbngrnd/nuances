@@ -8,7 +8,13 @@ const config: Config = {
     "./lib/**/*.{ts,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        display: ["var(--font-display)", "Didot", "Baskerville", "serif"],
+        sans: ["var(--font-sans)", "Avenir Next", "Segoe UI", "sans-serif"],
+        caps: ["var(--font-caps)", "Beausite Medium", "Avenir Next", "sans-serif"],
+      },
+    },
   },
   plugins: [],
 };
