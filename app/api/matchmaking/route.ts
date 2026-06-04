@@ -36,7 +36,7 @@ async function authClient() {
 
 async function ensureUserExists(admin: ReturnType<typeof adminClient>, userId: string) {
   if (!admin) return;
-  const { data } = await admin.from("users").select("id").eq("id", userId).single();
+  const { data } = await admin.from("users").select("id").eq("id", userId).maybeSingle();
   if (!data) {
     const adj = ["Wandering","Quiet","Patient","Curious","Silent","Distant","Gentle","Pensive"][Math.floor(Math.random()*8)];
     const noun = ["Echo","Mist","Fox","Moon","Tide","Cloud","Compass","Oracle"][Math.floor(Math.random()*8)];
@@ -51,50 +51,79 @@ async function ensureUserExists(admin: ReturnType<typeof adminClient>, userId: s
   }
 }
 
+// Check if user is already in a live room (created in last 30 min)
+async function checkExistingRoom(admin: ReturnType<typeof adminClient>, userId: string) {
+  if (!admin) return null;
+  const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+  const { data } = await admin
+    .from("room_participants")
+    .select("room_id, rooms!inner(status, created_at)")
+    .eq("user_id", userId)
+    .eq("rooms.status", "live")
+    .gte("rooms.created_at", cutoff)
+    .order("joined_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return data?.room_id ?? null;
+}
+
 async function tryMatch(admin: ReturnType<typeof adminClient>, userId: string, mode: string) {
   if (!admin) return NextResponse.json({ matched: false, error: "No admin client" });
 
-  // Try same mode first, then any mode as fallback
-  const queries = [
-    admin.from("matchmaking_queue").select("*").eq("mode", mode).eq("status", "waiting").neq("user_id", userId).order("created_at", { ascending: true }).limit(1),
-    admin.from("matchmaking_queue").select("*").eq("status", "waiting").neq("user_id", userId).order("created_at", { ascending: true }).limit(1),
-  ];
+  // First check if already in a room
+  const existingRoom = await checkExistingRoom(admin, userId);
+  if (existingRoom) {
+    console.log("[matchmaking] user", userId, "already in room", existingRoom);
+    return NextResponse.json({ matched: true, roomId: existingRoom });
+  }
 
+  // Find a partner — try same mode first, then any mode
   let partner = null;
-  for (const query of queries) {
-    const { data, error } = await query;
-    if (error) console.error("[matchmaking] candidate query error:", error.message);
+  for (const filter of [
+    (q: any) => q.eq("mode", mode),
+    (q: any) => q, // any mode
+  ]) {
+    const { data, error } = await filter(
+      admin.from("matchmaking_queue")
+        .select("*")
+        .eq("status", "waiting")
+        .neq("user_id", userId)
+    ).order("created_at", { ascending: true }).limit(1);
+
+    if (error) console.error("[matchmaking] query error:", error.message);
     if (data?.[0]) { partner = data[0]; break; }
   }
 
   if (!partner) {
-    console.log("[matchmaking] no partner found for", userId, "mode:", mode);
+    console.log("[matchmaking] no partner for", userId, "(mode:", mode, ")");
     return NextResponse.json({ matched: false });
   }
 
-  console.log("[matchmaking] found partner", partner.user_id, "for", userId);
+  console.log("[matchmaking] matched", userId, "with", partner.user_id);
 
   const { data: room, error: roomErr } = await admin.from("rooms")
-    .insert({ mode: partner.mode === mode ? mode : mode, status: "live" })
+    .insert({ mode, status: "live" })
     .select().single();
 
   if (roomErr || !room) {
-    console.error("[matchmaking] room creation error:", roomErr?.message);
+    console.error("[matchmaking] room creation failed:", roomErr?.message);
     return NextResponse.json({ matched: false, error: roomErr?.message });
   }
 
-  const { error: partErr } = await admin.from("room_participants").insert([
+  await admin.from("room_participants").insert([
     { room_id: room.id, user_id: userId },
     { room_id: room.id, user_id: partner.user_id },
   ]);
 
-  if (partErr) console.error("[matchmaking] participants error:", partErr.message);
-
+  // Mark matched entries (use maybeSingle-safe bulk update)
   await admin.from("matchmaking_queue")
     .update({ status: "matched", matched_at: new Date().toISOString() })
-    .in("user_id", [userId, partner.user_id]);
+    .eq("user_id", userId).eq("status", "waiting");
+  await admin.from("matchmaking_queue")
+    .update({ status: "matched", matched_at: new Date().toISOString() })
+    .eq("user_id", partner.user_id).eq("status", "waiting");
 
-  console.log("[matchmaking] matched", userId, "with", partner.user_id, "in room", room.id);
+  console.log("[matchmaking] room created:", room.id);
   return NextResponse.json({ matched: true, roomId: room.id });
 }
 
@@ -106,55 +135,46 @@ export async function POST(request: Request) {
 
   const admin = adminClient();
   if (!admin) {
-    console.error("[matchmaking] SUPABASE_SERVICE_ROLE_KEY not set");
-    return NextResponse.json({ matched: false, error: "SUPABASE_SERVICE_ROLE_KEY not set in Vercel env vars" });
+    return NextResponse.json({ matched: false, error: "SUPABASE_SERVICE_ROLE_KEY not configured" });
   }
 
   if (body.action === "enter" && body.mode) {
     await ensureUserExists(admin, user.id);
 
-    // Cancel existing waiting entry
-    const { error: cancelErr } = await admin.from("matchmaking_queue")
+    // Cancel only existing WAITING entries (never cancel matched ones)
+    await admin.from("matchmaking_queue")
       .update({ status: "cancelled" })
       .eq("user_id", user.id)
       .eq("status", "waiting");
-    if (cancelErr) console.error("[matchmaking] cancel error:", cancelErr.message);
 
     const { error: insertErr } = await admin.from("matchmaking_queue")
       .insert({ user_id: user.id, mode: body.mode, language: "en", country: "unknown", status: "waiting" });
 
     if (insertErr) {
-      console.error("[matchmaking] queue insert error:", insertErr.message);
+      console.error("[matchmaking] insert error:", insertErr.message);
       return NextResponse.json({ matched: false, error: insertErr.message });
     }
 
-    console.log("[matchmaking] user", user.id, "entered queue for mode:", body.mode);
     return tryMatch(admin, user.id, body.mode);
   }
 
   if (body.action === "poll") {
-    const { data: entry, error: entryErr } = await admin.from("matchmaking_queue")
-      .select("*").eq("user_id", user.id).eq("status", "waiting").single();
+    // Primary: check room_participants (most reliable — not affected by queue corruption)
+    const roomId = await checkExistingRoom(admin, user.id);
+    if (roomId) return NextResponse.json({ matched: true, roomId });
 
-    // Check if already matched
-    const { data: matched } = await admin.from("matchmaking_queue")
-      .select("*").eq("user_id", user.id).eq("status", "matched")
-      .order("matched_at", { ascending: false }).limit(1).single();
+    // Fallback: try to find a match
+    const { data: waiting } = await admin.from("matchmaking_queue")
+      .select("mode").eq("user_id", user.id).eq("status", "waiting")
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
 
-    if (matched) {
-      const { data: room } = await admin.from("room_participants")
-        .select("room_id").eq("user_id", user.id)
-        .order("joined_at", { ascending: false }).limit(1).single();
-      return NextResponse.json({ matched: true, roomId: room?.room_id });
-    }
-
-    if (!entry) return NextResponse.json({ matched: false });
-    return tryMatch(admin, user.id, entry.mode);
+    if (!waiting) return NextResponse.json({ matched: false });
+    return tryMatch(admin, user.id, waiting.mode);
   }
 
   if (body.action === "leave") {
     await admin.from("matchmaking_queue")
-      .update({ status: "cancelled" }).eq("user_id", user.id);
+      .update({ status: "cancelled" }).eq("user_id", user.id).eq("status", "waiting");
     return NextResponse.json({ ok: true });
   }
 
