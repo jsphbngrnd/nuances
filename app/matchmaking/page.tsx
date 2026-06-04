@@ -8,7 +8,7 @@ import { MODES, MODE_DETAIL } from "@/lib/nuance-data";
 import { StatusBar, Screen, ModeGlyph } from "@/components/ui";
 import { useCopy } from "@/lib/use-copy";
 
-const REAL_MATCH_TIMEOUT_MS = 8000;
+const REAL_MATCH_TIMEOUT_MS = 20000; // 20s before falling back to AI
 
 function MatchmakingPageInner() {
   const t = useCopy();
