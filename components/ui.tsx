@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useCopy } from "@/lib/use-copy";
+import { createClient } from "@/lib/supabase/client";
 
 /* ── LiveDot ── */
 export function LiveDot({ size = 7 }: { size?: number }) {
@@ -60,10 +62,26 @@ const NAV_HREFS = [
   { id: "account", href: "/account" },
 ] as const;
 
-export function MiniNav({ badge }: { badge?: number }) {
+export function MiniNav({ badge: badgeProp }: { badge?: number } = {}) {
   const t = useCopy();
   const path = usePathname();
   const active = NAV_HREFS.find(i => path.startsWith(i.href))?.id ?? "home";
+  const [notifCount, setNotifCount] = useState(0);
+
+  useEffect(() => {
+    // Fetch pending reconnect invites for badge count
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { count } = await supabase
+        .from("reconnects")
+        .select("id", { count: "exact", head: true })
+        .or(`and(user_b_id.eq.${user.id},user_a_vote.eq.true,user_b_vote.is.null),and(user_a_id.eq.${user.id},user_b_vote.eq.true,user_a_vote.is.null)`);
+      setNotifCount(count ?? 0);
+    });
+  }, [path]); // re-fetch when navigating
+
+  const badge = badgeProp ?? notifCount;
   const navItems = [
     { id: "home", href: "/home", label: t.nav.home },
     { id: "reconnects", href: "/reconnects", label: t.nav.reconnects },
