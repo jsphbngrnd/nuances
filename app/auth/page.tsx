@@ -24,9 +24,16 @@ function AuthPageInner() {
     setError("");
     const supabase = createClient();
     if (isSignup) {
-      const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${location.origin}/auth/callback` } });
+      const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${location.origin}/auth/callback` } });
       if (error) setError(error.message);
-      else router.push("/auth/confirming");
+      else if (data.session) {
+        // Email confirmation disabled — already signed in, go straight to onboarding
+        router.push("/onboarding");
+        router.refresh();
+      } else {
+        // Email confirmation enabled — show the check-your-email screen
+        router.push("/auth/confirming");
+      }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setError(error.message);
