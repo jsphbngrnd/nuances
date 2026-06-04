@@ -73,19 +73,30 @@ export async function POST(request: Request) {
 
   // ── POLL ─────────────────────────────────────────────────────
   if (body.action === "poll") {
-    // Check room_participants first — most reliable
+    // Find user's current waiting entry first — needed for time anchor
+    const { data: entry } = await db.from("matchmaking_queue")
+      .select("id, mode, created_at").eq("user_id", user.id).eq("status", "waiting")
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+
+    // Check room_participants — only rooms joined AFTER this queue entry was created
+    // (prevents old rooms from hijacking new matchmaking attempts)
+    if (entry) {
+      const { data: rp } = await db.from("room_participants")
+        .select("room_id").eq("user_id", user.id)
+        .gte("joined_at", entry.created_at)
+        .order("joined_at", { ascending: false }).limit(1).maybeSingle();
+      if (rp?.room_id) return NextResponse.json({ matched: true, roomId: rp.room_id });
+      return doMatch(db, user.id, entry.mode);
+    }
+
+    // No waiting entry — check for a very recent match (last 60s)
     const { data: rp } = await db.from("room_participants")
       .select("room_id").eq("user_id", user.id)
+      .gte("joined_at", new Date(Date.now() - 60_000).toISOString())
       .order("joined_at", { ascending: false }).limit(1).maybeSingle();
     if (rp?.room_id) return NextResponse.json({ matched: true, roomId: rp.room_id });
 
-    // Find user's waiting entry
-    const { data: entry } = await db.from("matchmaking_queue")
-      .select("mode").eq("user_id", user.id).eq("status", "waiting")
-      .order("created_at", { ascending: false }).limit(1).maybeSingle();
-    if (!entry) return NextResponse.json({ matched: false });
-
-    return doMatch(db, user.id, entry.mode);
+    return NextResponse.json({ matched: false });
   }
 
   // ── LEAVE ────────────────────────────────────────────────────

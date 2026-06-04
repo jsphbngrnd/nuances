@@ -10,9 +10,9 @@
 /* Fonts loaded via next/font/local in app/layout.tsx — no @font-face needed here */
 
 :root {
-  --font-display: "Concrette", Didot, Baskerville, "Times New Roman", serif;
-  --font-sans: "Beausite", "Avenir Next", "Segoe UI", sans-serif;
-  --font-caps: "Beausite Medium", "Beausite", "Avenir Next", "Segoe UI", sans-serif;
+  --font-display: "Concrette", serif;
+  --font-sans: "Beausite", sans-serif;
+  --font-caps: "Beausite Medium", "Beausite", sans-serif;
 
   /* Night (default) */
   --bg: #08080a;
