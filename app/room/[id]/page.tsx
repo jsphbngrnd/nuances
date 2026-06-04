@@ -308,6 +308,7 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
     fetch("/api/matchmaking", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "leave" }) });
     sessionStorage.setItem("nuance-room", JSON.stringify({
       mode, topic, partnerAlias: partnerName,
+      roomId: roomId ?? null, // needed for reconnect voting
       messages: messages.filter(m => m.who !== "system").map(m => ({ who: m.who, text: m.text })),
     }));
     router.push(`/summary/live?mode=${mode}`);

@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     alias: partnerUsers?.alias ?? null,
     displayName: partnerUsers?.display_name ?? null,
-    isFirst: myIndex === 0, // first joined = first to speak
+    partnerId: partnerEntry?.user_id ?? null, // needed for reconnect voting
+    isFirst: myIndex === 0,
   });
 }

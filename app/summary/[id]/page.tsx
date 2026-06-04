@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { MODES } from "@/lib/nuance-data";
 import { StatusBar, Screen, ArrowIcon } from "@/components/ui";
 import { useCopy, useLocale } from "@/lib/use-copy";
+import { createClient } from "@/lib/supabase/client";
 
 type Rec = { kind: string; title: string; source: string; reason?: string };
 type Summary = {
@@ -30,7 +31,7 @@ function SummaryPageInner() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [data, setData] = useState<Summary | null>(null);
-  const [roomMeta, setRoomMeta] = useState<{ topic: string; partnerAlias: string; duration: string }>({
+  const [roomMeta, setRoomMeta] = useState<{ topic: string; partnerAlias: string; duration: string; roomId?: string }>({
     topic: "—", partnerAlias: "VoyageuseSereine", duration: "5:00",
   });
   const [vote, setVote] = useState<"yes" | "no" | null>(null);
@@ -43,7 +44,7 @@ function SummaryPageInner() {
       return;
     }
 
-    let roomData: { mode: string; topic: string; partnerAlias: string; messages: { who: string; text: string }[] };
+    let roomData: { mode: string; topic: string; partnerAlias: string; roomId?: string; messages: { who: string; text: string }[] };
     try {
       roomData = JSON.parse(raw);
     } catch {
@@ -52,7 +53,7 @@ function SummaryPageInner() {
       return;
     }
 
-    setRoomMeta({ topic: roomData.topic, partnerAlias: roomData.partnerAlias, duration: "5:00" });
+    setRoomMeta({ topic: roomData.topic, partnerAlias: roomData.partnerAlias, duration: "5:00", roomId: roomData.roomId });
 
     if (!roomData.messages || roomData.messages.length === 0) {
       setError(t.summary.tooShort);
@@ -216,7 +217,30 @@ function SummaryPageInner() {
                   <p style={{ margin: "0 0 16px", fontSize: 12.5, lineHeight: 1.45, color: "var(--muted)" }}>{t.summary.reconnectSub}</p>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                     <button className="np-btn np-btn-ghost" style={{ width: "100%" }} onClick={() => setVote("no")}>{t.summary.notNow}</button>
-                    <button className="np-btn" style={{ width: "100%" }} onClick={() => setVote("yes")}>{t.summary.yesReconnect}</button>
+                    <button className="np-btn" style={{ width: "100%" }} onClick={async () => {
+                      setVote("yes");
+                      // Write vote to Supabase so partner gets notified
+                      try {
+                        const supabase = createClient();
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (!user || !roomMeta.roomId) return;
+                        // Find partner via admin endpoint (bypasses RLS)
+                        const partnerRes = await fetch(`/api/room-partner?roomId=${roomMeta.roomId}`);
+                        const partnerData = await partnerRes.json();
+                        const partnerId = partnerData?.partnerId;
+                        if (!partnerId) return;
+                        if (!partnerId) return;
+                        // Check if reconnect record already exists
+                        const { data: existing } = await supabase
+                          .from("reconnects").select("id, user_a_id").eq("room_id", roomMeta.roomId).maybeSingle();
+                        if (existing) {
+                          const field = existing.user_a_id === user.id ? "user_a_vote" : "user_b_vote";
+                          await supabase.from("reconnects").update({ [field]: true }).eq("id", existing.id);
+                        } else {
+                          await supabase.from("reconnects").insert({ room_id: roomMeta.roomId, user_a_id: user.id, user_b_id: partnerId, user_a_vote: true });
+                        }
+                      } catch (e) { console.error("reconnect vote error:", e); }
+                    }}>{t.summary.yesReconnect}</button>
                   </div>
                 </>
               ) : (
