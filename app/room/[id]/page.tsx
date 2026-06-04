@@ -185,7 +185,13 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "2px 4px 12px", position: "relative" }}>
-          <button onClick={() => router.push(`/summary/live?mode=${mode}`)} style={{ width: 34, height: 34, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)", color: "var(--text)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <button onClick={() => {
+            sessionStorage.setItem("nuance-room", JSON.stringify({
+              mode, topic, partnerAlias: partnerName,
+              messages: messages.filter(m => m.who !== "system").map(m => ({ who: m.who, text: m.text })),
+            }));
+            router.push(`/summary/live?mode=${mode}`);
+          }} style={{ width: 34, height: 34, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)", color: "var(--text)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
           </button>
           <div style={{ flex: 1, minWidth: 0 }}>

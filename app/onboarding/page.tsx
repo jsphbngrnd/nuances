@@ -12,7 +12,11 @@ const TOTAL = 5;
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [lang, setLang] = useState("en");
+  const [lang, setLang] = useState(() => {
+    if (typeof window === "undefined") return "en";
+    const browserLang = navigator.language || (navigator as any).userLanguage || "";
+    return browserLang.toLowerCase().startsWith("fr") ? "fr" : "en";
+  });
   const [scrolledEnd, setScrolledEnd] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [aliasIdx, setAliasIdx] = useState(0);
