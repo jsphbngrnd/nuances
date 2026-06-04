@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { Locale } from "@/lib/i18n";
@@ -40,6 +40,10 @@ export function AccountClient({ profile, locale }: { profile: Profile | null; lo
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [theme, setTheme] = useState<"night" | "day">(() =>
+    typeof window !== "undefined" && window.localStorage.getItem("nuance-theme-mode") === "day" ? "day" : "night"
+  );
+  const [langPending, startLangTransition] = useTransition();
 
   async function handleSave() {
     setSaving(true);
@@ -58,6 +62,27 @@ export function AccountClient({ profile, locale }: { profile: Profile | null; lo
       const data = await res.json();
       setError(data.error ?? "Something went wrong.");
     }
+  }
+
+  function toggleTheme() {
+    const next = theme === "night" ? "day" : "night";
+    setTheme(next);
+    document.body.dataset.theme = next === "day" ? "day" : "";
+    if (next === "day") document.documentElement.classList.remove("dark");
+    else document.documentElement.classList.add("dark");
+    window.localStorage.setItem("nuance-theme-mode", next);
+    window.dispatchEvent(new Event("nuance-theme-change"));
+  }
+
+  async function switchLanguage(lang: Locale) {
+    startLangTransition(async () => {
+      await fetch("/api/locale", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locale: lang }),
+      });
+      router.refresh();
+    });
   }
 
   async function handleSignOut() {
@@ -163,6 +188,48 @@ export function AccountClient({ profile, locale }: { profile: Profile | null; lo
       >
         {saving ? (isEn ? "Saving…" : "Sauvegarde…") : saved ? (isEn ? "✓ Saved" : "✓ Sauvegardé") : (isEn ? "Save changes" : "Enregistrer")}
       </button>
+
+      {/* Language + Theme */}
+      <div className="rounded-2xl border border-white/08 bg-white/[0.04] p-4 space-y-4">
+        <p className="eyebrow">{isEn ? "Display" : "Affichage"}</p>
+
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-xs text-foreground">{isEn ? "Language" : "Langue"}</span>
+          <div className="flex rounded-full border border-white/12 bg-white/[0.05] p-0.5">
+            {(["en", "fr"] as Locale[]).map((lang) => (
+              <button
+                key={lang}
+                type="button"
+                disabled={langPending}
+                onClick={() => switchLanguage(lang)}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition ${
+                  locale === lang ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {lang}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-xs text-foreground">{isEn ? "Appearance" : "Apparence"}</span>
+          <div className="flex rounded-full border border-white/12 bg-white/[0.05] p-0.5">
+            {(["night", "day"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={toggleTheme}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize tracking-wide transition ${
+                  theme === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t === "night" ? (isEn ? "Dark" : "Sombre") : (isEn ? "Light" : "Clair")}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {/* Divider */}
       <div className="hairline" />

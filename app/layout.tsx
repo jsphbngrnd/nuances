@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "@/app/globals.css";
 import { DayNightTheme } from "@/components/day-night-theme";
-import { LanguageToggle } from "@/components/language-toggle";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { getLocale } from "@/lib/server-locale";
 
 const display = localFont({
@@ -43,8 +41,6 @@ export default async function RootLayout({
     >
       <body>
         <DayNightTheme />
-        <LanguageToggle locale={locale} />
-        <ThemeToggle />
         {children}
       </body>
     </html>

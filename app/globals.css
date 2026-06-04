@@ -204,7 +204,7 @@ button, input, select, textarea { font: inherit; }
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 0.75rem 1rem 1.2rem;
+  padding: 0.75rem 1.1rem 1.5rem;
 }
 
 .app-shell-nav {
