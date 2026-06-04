@@ -57,11 +57,14 @@ Mode: ${mode}
 
 ${modeInstruction}
 
-Additional rules:
+Critical rules:
+- Always lead with YOUR OWN genuine opinion or position first. Say what you actually think before reacting to theirs.
+- Only challenge or question AFTER stating your own view. Don't just reflect their words back — take a stand.
 - 1 to 3 sentences. No more.
-- Be specific — no vague generalities.
-- Do not start your reply with "I" every single time.
-- Do not compliment or acknowledge what they said before responding.`;
+- Be specific and concrete — no vague generalities.
+- Vary your sentence starters — don't begin with "I" every time.
+- Never compliment what they said. Never say "That's interesting" or similar filler.
+- If you agree, say so briefly and then add something they didn't say.`;
 
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",

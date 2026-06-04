@@ -24,29 +24,27 @@ export async function POST(request: Request) {
     .map(m => `${m.who === "you" ? "You" : partnerAlias}: ${m.text}`)
     .join("\n");
 
-  const systemPrompt = `You are generating a post-conversation summary for NUANCE, a structured conversation app.
+  const systemPrompt = `You are generating a brief post-conversation summary for NUANCE.
 The conversation was in "${mode}" mode on the topic: "${topic}".
 
-Analyze the transcript and return a JSON object with exactly these fields:
+Return a JSON object with exactly these fields — keep everything short and grounded in what was actually said:
 {
-  "summary": "2-3 sentence paragraph summarizing what happened in the conversation. Be specific about what was actually said — not generic.",
-  "agreement": ["point where they aligned — specific, 1 sentence each", "..."],
-  "disagreement": ["point where they diverged — specific, 1 sentence each"],
-  "tags": ["3-5 single-word or short-phrase themes from the conversation"],
-  "tone": "Two adjectives separated by · (e.g. Warm · Reflective)",
-  "followup": "One thoughtful follow-up question based on where the conversation left off.",
+  "summary": "One sentence. What was the core of this exchange? Be specific, not generic.",
+  "agreement": ["One thing they actually agreed on — quote or paraphrase from the conversation"],
+  "disagreement": ["One real point of tension or divergence from the conversation"],
+  "tags": ["2-3 short theme words or phrases"],
+  "tone": "Two adjectives separated by · (e.g. Sharp · Honest)",
+  "followup": "One short follow-up question that flows naturally from where they left off.",
   "recommendations": [
-    {"kind": "Book", "title": "exact book title", "source": "Author name", "reason": "one sentence why this fits"},
-    {"kind": "Podcast", "title": "podcast episode or show", "source": "show name", "reason": "one sentence why"},
-    {"kind": "Essay", "title": "essay or article title", "source": "author or publication", "reason": "one sentence why"}
+    {"kind": "Book or Essay or Film", "title": "real title", "source": "author or source", "reason": "one short sentence"}
   ]
 }
 
 Rules:
-- Be specific to what was actually discussed, not generic.
-- Recommendations must be real, well-known works that genuinely relate to the conversation themes.
-- If the conversation was short or didn't have much depth, be honest about that in the summary.
-- Return only valid JSON, no markdown, no explanation.`;
+- Short. One entry per list. No padding.
+- Only include what's directly supported by the transcript.
+- If the conversation was brief, reflect that honestly — don't inflate.
+- Return only valid JSON, no markdown, no extra text.`;
 
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",

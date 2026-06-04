@@ -35,7 +35,10 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   const search = useSearchParams();
   const mode = (search.get("mode") || "deep") as keyof typeof MODE_DETAIL;
   const m = MODES.find(x => x.id === mode)!;
-  const topic = TOPICS[mode][0];
+  const topicPool = TOPICS[mode];
+  // Pick a random topic once per room (stable via useRef so it doesn't change on re-render)
+  const topicRef = useRef(topicPool[Math.floor(Math.random() * topicPool.length)]);
+  const topic = topicRef.current;
   const persona = selectPersona(mode, search.get("personaId"));
   const partnerName = persona?.alias ?? "PatientEcho";
   const partnerLang = persona?.language ?? "English";
@@ -88,16 +91,16 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
       }),
     })
       .then(r => r.json())
-      .then(d => {
+      .then(d => new Promise<void>(resolve => setTimeout(() => resolve(d), 1500)).then((d: any) => {
         if (cancelled) return;
-        if (d.reply?.startsWith("(OpenAI")) {
+        if (d.reply?.startsWith("(OpenAI") || d.reply?.startsWith("(No OpenAI")) {
           setError(d.reply);
         } else {
           setMessages([{ who: "them", text: d.reply, translated: partnerLang !== "English" }]);
         }
         setAiTyping(false);
-        setTurn("you"); // now it's your turn
-      })
+        setTurn("you");
+      }))
       .catch(() => {
         if (!cancelled) { setAiTyping(false); setTurn("you"); }
       });
@@ -139,13 +142,16 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
           userMessage: text,
         }),
       });
-      const data = await res.json();
-      if (data.reply?.startsWith("(OpenAI")) {
+      const [data] = await Promise.all([
+        res.json(),
+        new Promise(r => setTimeout(r, 1500)), // min 1.5s so typing dots feel natural
+      ]);
+      if (data.reply?.startsWith("(OpenAI") || data.reply?.startsWith("(No OpenAI")) {
         setError(data.reply);
         setTurn("you");
       } else {
         setMessages(prev => [...prev, { who: "them", text: data.reply, translated: partnerLang !== "English" }]);
-        setTurn("you"); // switch back — user's turn again
+        setTurn("you");
       }
     } catch {
       setMessages(prev => [...prev, { who: "system", text: t.room.connectionDrop }]);
@@ -303,11 +309,20 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
 
         {/* Composer */}
         <div style={{ paddingTop: 8, borderTop: "1px solid var(--line-soft)", marginTop: 4 }}>
-          {/* Turn indicator */}
-          <div style={{ marginBottom: 6, textAlign: "center" }}>
+          {/* Turn indicator + stop CTA */}
+          <div style={{ marginBottom: 6, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span className="np-eyebrow" style={{ fontSize: 7.5, color: turn === "you" ? "var(--positive)" : "var(--faint)" }}>
               {turn === "you" ? "▶ Your turn" : `▶ ${partnerName} is replying…`}
             </span>
+            <button onClick={() => {
+              sessionStorage.setItem("nuance-room", JSON.stringify({
+                mode, topic, partnerAlias: partnerName,
+                messages: messages.filter(m => m.who !== "system").map(m => ({ who: m.who, text: m.text })),
+              }));
+              router.push(`/summary/live?mode=${mode}`);
+            }} style={{ background: "transparent", border: "none", cursor: "pointer", fontFamily: "var(--font-caps)", fontSize: 7.5, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--danger)", padding: 0 }}>
+              End conversation
+            </button>
           </div>
 
           {/* Live voice transcript */}

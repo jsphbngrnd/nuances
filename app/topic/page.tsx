@@ -15,7 +15,7 @@ function TopicPageInner() {
   const mode = (params.get("mode") || "deep") as keyof typeof TOPICS;
   const m = MODES.find(x => x.id === mode)!;
   const pool = TOPICS[mode];
-  const [idx, setIdx] = useState(0);
+  const [idx, setIdx] = useState(() => Math.floor(Math.random() * pool.length));
   const [rerolls, setRerolls] = useState(0);
   const [accepted, setAccepted] = useState(false);
 
