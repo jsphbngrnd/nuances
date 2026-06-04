@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { ONB } from "@/lib/nuance-data";
 import { StatusBar, Screen, MiniNav, TopBar, Field, PillGroup, ToggleRow, inputStyle } from "@/components/ui";
-import { useCopy } from "@/lib/use-copy";
+import { useCopy, setLocaleCookie } from "@/lib/use-copy";
+import type { Locale } from "@/lib/copy";
 
 const ALIAS = "OracleDuVendredi";
 
@@ -86,7 +87,7 @@ export default function AccountPage() {
             <span style={{ fontSize: 13.5 }}>{t.account.language}</span>
             <div style={{ display: "flex", gap: 4, padding: 4, borderRadius: 999, border: "1px solid var(--line)", background: "var(--panel)" }}>
               {[["en", "EN"], ["fr", "FR"]].map(([code, label]) => (
-                <button key={code} onClick={() => setLang(code)} style={{ padding: "6px 12px", borderRadius: 999, border: "none", cursor: "pointer", fontFamily: "var(--font-caps)", fontSize: 10, letterSpacing: "0.14em", background: lang === code ? "var(--accent)" : "transparent", color: lang === code ? "var(--on-accent)" : "var(--text)", transition: "background 160ms ease" }}>
+                <button key={code} onClick={() => { setLang(code); setLocaleCookie(code as Locale); }} style={{ padding: "6px 12px", borderRadius: 999, border: "none", cursor: "pointer", fontFamily: "var(--font-caps)", fontSize: 10, letterSpacing: "0.14em", background: lang === code ? "var(--accent)" : "transparent", color: lang === code ? "var(--on-accent)" : "var(--text)", transition: "background 160ms ease" }}>
                   {label}
                 </button>
               ))}

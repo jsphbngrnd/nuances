@@ -14,11 +14,10 @@ export function useCopy(): Copy {
   const [copy, setCopy] = useState<Copy>(() => getCopy(getLocaleCookie()));
 
   useEffect(() => {
-    setCopy(getCopy(getLocaleCookie()));
-
-    // Re-sync when locale cookie changes (e.g. toggled in Account)
-    const id = setInterval(() => setCopy(getCopy(getLocaleCookie())), 1000);
-    return () => clearInterval(id);
+    const sync = () => setCopy(getCopy(getLocaleCookie()));
+    sync();
+    window.addEventListener("nuance-locale-change", sync);
+    return () => window.removeEventListener("nuance-locale-change", sync);
   }, []);
 
   return copy;
@@ -27,9 +26,16 @@ export function useCopy(): Copy {
 export function useLocale(): Locale {
   const [locale, setLocale] = useState<Locale>(() => getLocaleCookie());
   useEffect(() => {
-    setLocale(getLocaleCookie());
-    const id = setInterval(() => setLocale(getLocaleCookie()), 1000);
-    return () => clearInterval(id);
+    const sync = () => setLocale(getLocaleCookie());
+    sync();
+    window.addEventListener("nuance-locale-change", sync);
+    return () => window.removeEventListener("nuance-locale-change", sync);
   }, []);
   return locale;
+}
+
+/** Call this whenever you change the nuance-locale cookie */
+export function setLocaleCookie(locale: Locale) {
+  document.cookie = `nuance-locale=${locale};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
+  window.dispatchEvent(new Event("nuance-locale-change"));
 }
