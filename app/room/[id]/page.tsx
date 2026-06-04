@@ -104,52 +104,32 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, aiTyping]);
 
-  // ── Real room: subscribe to Supabase Realtime ─────────────────
+  // ── Real room: Supabase Broadcast channel ────────────────────
+  // Broadcast is simpler than postgres_changes — no table replication needed
   useEffect(() => {
     if (!roomId || isAi) return;
     const supabase = createClient();
 
-    // Fetch partner alias via admin endpoint (RLS blocks reading other users' profiles)
+    // Fetch partner alias
     fetch(`/api/room-partner?roomId=${roomId}`)
       .then(r => r.json())
       .then(d => { if (d.alias) setPartnerName(d.alias); })
       .catch(() => {});
 
-    // Load existing messages first
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      const { data: msgs } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("room_id", roomId)
-        .order("created_at", { ascending: true });
-
-      if (msgs) {
-        setMessages(msgs.map(m => ({
-          id: m.id,
-          who: m.user_id === user?.id ? "you" : "them",
-          text: m.content,
-        })));
-        setTurn("you"); // after loading history, it's your turn
-      }
+    // Join broadcast channel — both users in same room share this channel
+    const channel = supabase.channel(`room-${roomId}`, {
+      config: { broadcast: { self: false } }, // don't echo own messages
     });
 
-    // Subscribe to new messages
-    const channel = supabase
-      .channel(`room:${roomId}`)
-      .on("postgres_changes", {
-        event: "INSERT",
-        schema: "public",
-        table: "messages",
-        filter: `room_id=eq.${roomId}`,
-      }, async (payload) => {
-        const { data: { user } } = await supabase.auth.getUser();
-        const msg = payload.new as any;
-        if (msg.user_id !== user?.id) {
-          setMessages(prev => [...prev, { id: msg.id, who: "them", text: msg.content }]);
-          setThemLeft(v => Math.max(0, v - 1)); // partner used some of their time
-        }
-      })
-      .subscribe();
+    channel.on("broadcast", { event: "message" }, (payload: any) => {
+      setMessages(prev => [...prev, { who: "them", text: payload.payload.text }]);
+    });
+
+    channel.subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        setTurn("you");
+      }
+    });
 
     channelRef.current = channel;
     return () => { supabase.removeChannel(channel); };
@@ -201,16 +181,12 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
     setDraft("");
     stopListening();
 
-    if (!isAi && roomId) {
-      // Real room — write to Supabase, Realtime delivers to partner
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      await supabase.from("messages").insert({
-        room_id: roomId,
-        user_id: user?.id,
-        source_type: "text",
-        content: text,
-        moderation_status: "approved",
+    if (!isAi && roomId && channelRef.current) {
+      // Real room — broadcast directly to partner via shared channel
+      channelRef.current.send({
+        type: "broadcast",
+        event: "message",
+        payload: { text },
       });
       setMessages(prev => [...prev, { who: "you", text }]);
       return;
