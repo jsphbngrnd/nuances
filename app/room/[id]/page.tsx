@@ -43,27 +43,28 @@ function RoomPageInner({ params }: { params: Promise<{ id: string }> }) {
   useEffect(() => {
     params.then(p => {
       const id = p.id;
-      setRoomId(id && id !== "live" ? id : null);
+      const actualId = id && id !== "live" ? id : null;
+      setRoomId(actualId);
+      // Compute topic once from roomId hash — deterministic so both users match
+      if (!search.get("topic")) {
+        const seed = actualId ?? "default";
+        let hash = 0;
+        for (let i = 0; i < seed.length; i++) {
+          hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+          hash |= 0;
+        }
+        setTopic(topicPool[Math.abs(hash) % topicPool.length]);
+      }
     });
   }, []);
   const m = MODES.find(x => x.id === mode)!;
 
   const topicPool = TOPICS[mode];
-  // Topic from URL param (AI rooms) OR deterministic from roomId (real rooms)
-  // roomId hash ensures both users always see the same topic
-  const topicRef = useRef(() => {
+  // Topic is computed once when roomId resolves — stored in state so it never changes
+  const [topic, setTopic] = useState(() => {
     const fromUrl = search.get("topic");
-    if (fromUrl) return decodeURIComponent(fromUrl);
-    // Deterministic from roomId so both users in same room get same topic
-    const seed = roomId ?? String(Date.now());
-    let hash = 0;
-    for (let i = 0; i < seed.length; i++) {
-      hash = ((hash << 5) - hash) + seed.charCodeAt(i);
-      hash |= 0;
-    }
-    return topicPool[Math.abs(hash) % topicPool.length];
+    return fromUrl ? decodeURIComponent(fromUrl) : ""; // real value set in useEffect below
   });
-  const topic = topicRef.current();
 
   const personaRef = useRef(selectPersona(mode, search.get("personaId")));
   const persona = personaRef.current;
